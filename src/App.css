@@ -20,3 +20,19 @@ a:visited {
 	font-size: 11px;
 	color: gray;
 }
+
+.ratingContainer {
+	display: flex;
+	justify-content: center;
+}
+
+.averageRating {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 45px;
+	width: 45px;
+	border-radius: 12px;
+	color: white;
+	font-weight: bold;
+}

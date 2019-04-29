@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
-import ReactTable from 'react-table'
 import './App.css';
+
+// Import React Table
+import ReactTable from 'react-table'
 import 'react-table/react-table.css'
 
 class App extends Component {
@@ -43,25 +45,37 @@ class App extends Component {
 				Header: '',
 				accessor: 'thumbnail',
 				maxWidth: 120,
-				Cell: props => <img src={props.value} height="64" alt="thumbnail" />
+				Cell: props => <img src={ props.value } height="64" alt="thumbnail" />
 			},
 			{
 				Header: 'Title',
 				accessor: 'name',
 				minWidth: 150,
 				maxWidth: 450,
-				style:{ 'whiteSpace': 'unset'}, // Allows word wrap
+				style: { 'whiteSpace': 'unset'}, // Allows word wrap
 				Cell: props => <div>
-								<a href={'https://boardgamegeek.com/boardgame/' + props.original.gameId} target="_blank" rel="noopener noreferrer">
-									{props.value}
-								</a> <span className='yearPublished'>({props.original.yearPublished})</span>
+								<a href={ 'https://boardgamegeek.com/boardgame/' + props.original.gameId } target="_blank" rel="noopener noreferrer">
+									{ props.value }
+								</a> <span className='yearPublished'>({ props.original.yearPublished })</span>
 							   </div>
 			},
 			{
 				Header: 'Avg Rating',
 				accessor: 'averageRating',
 				defaultSortDesc: true,
-				maxWidth: 100
+				maxWidth: 100,
+				Cell: props => 	<div className='ratingContainer'>
+									<div className='averageRating'
+										 style={{backgroundColor: props.value >= 9 ? '#249563'
+																: props.value >= 8 ?  '#2fc482'
+																: props.value >= 7 ?  '#1d8acd'
+																: props.value >= 5 ?  '#5369a2'
+																: props.value >= 3 ?  '#df4751'
+																: '#db303b'}}>
+										{/* Rounding to the tenths place */}
+										{ Math.round(10 * props.value)/10 }
+									</div>
+								</div>
 			},
 			{
 				Header: 'Min Players',
@@ -83,7 +97,7 @@ class App extends Component {
 			{
 				Header: 'Comment',
 				accessor: 'userComment',
-				style:{ 'whiteSpace': 'unset'} // Allows word wrap
+				style: { 'whiteSpace': 'unset'} // Allows word wrap
 			}
 		]
 
@@ -92,6 +106,7 @@ class App extends Component {
 				data={ this.state.gameList }
 				columns={ columns }
 				defaultSorted={ [{ id: "rank", desc: false }] }
+				defaultPageSize={ 50 }
 			/>
 		)
 	}
