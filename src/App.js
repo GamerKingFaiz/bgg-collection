@@ -1,26 +1,101 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { Component } from 'react';
+import ReactTable from 'react-table'
 import './App.css';
+import 'react-table/react-table.css'
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+class App extends Component {
+
+	constructor() {
+		super();
+		this.state = {
+			gameList: []
+		}
+	}
+
+	componentDidMount() {
+		let params = (new URL(document.location)).searchParams;
+		let username = params.get("username");
+		
+		let jsonUrl = 'https://bgg-json.azurewebsites.net/collection/' + username + '?grouped=true';
+
+		fetch(jsonUrl)
+		.then(response => response.json())
+		.then(games => {
+			let ownedGames = [];
+			ownedGames = games.filter(game => game.wishList === false);
+			ownedGames.forEach((game) => {
+				if (game.rank === -1) {
+					game.rank = 'N/A'
+				}
+			});
+			this.setState({ gameList: ownedGames });
+		})
+	}
+
+	render() {
+		const columns = [
+			{
+				Header: 'Rank',
+				accessor: 'rank',
+				maxWidth: 75
+			},
+			{
+				Header: '',
+				accessor: 'thumbnail',
+				maxWidth: 120,
+				Cell: props => <img src={props.value} height="64" alt="thumbnail" />
+			},
+			{
+				Header: 'Title',
+				accessor: 'name',
+				minWidth: 150,
+				maxWidth: 450,
+				style:{ 'whiteSpace': 'unset'}, // Allows word wrap
+				Cell: props => <div>
+								<a href={'https://boardgamegeek.com/boardgame/' + props.original.gameId} target="_blank" rel="noopener noreferrer">
+									{props.value}
+								</a> <span className='yearPublished'>({props.original.yearPublished})</span>
+							   </div>
+			},
+			{
+				Header: 'Avg Rating',
+				accessor: 'averageRating',
+				defaultSortDesc: true,
+				maxWidth: 100
+			},
+			{
+				Header: 'Min Players',
+				accessor: 'minPlayers',
+				maxWidth: 100
+			},
+			{
+				Header: 'Max Players',
+				accessor: 'maxPlayers',
+				defaultSortDesc: true,
+				maxWidth: 100
+			},
+			{
+				Header: 'Play Time',
+				accessor: 'playingTime',
+				defaultSortDesc: true,
+				maxWidth: 100
+			},
+			{
+				Header: 'Comment',
+				accessor: 'userComment',
+				style:{ 'whiteSpace': 'unset'} // Allows word wrap
+			}
+		]
+
+		return (
+			<ReactTable 
+				data={ this.state.gameList }
+				columns={ columns }
+				defaultSorted={ [{ id: "rank", desc: false }] }
+			/>
+		)
+	}
+	
 }
 
 export default App;
