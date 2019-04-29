@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/bgg-collection/static/css/main.74e4d564.chunk.css",
+    "main.js": "/bgg-collection/static/js/main.088798e4.chunk.js",
+    "main.js.map": "/bgg-collection/static/js/main.088798e4.chunk.js.map",
+    "runtime~main.js": "/bgg-collection/static/js/runtime~main.ec177c57.js",
+    "runtime~main.js.map": "/bgg-collection/static/js/runtime~main.ec177c57.js.map",
+    "static/css/2.d4b275d9.chunk.css": "/bgg-collection/static/css/2.d4b275d9.chunk.css",
+    "static/js/2.de4419f7.chunk.js": "/bgg-collection/static/js/2.de4419f7.chunk.js",
+    "static/js/2.de4419f7.chunk.js.map": "/bgg-collection/static/js/2.de4419f7.chunk.js.map",
+    "index.html": "/bgg-collection/index.html",
+    "precache-manifest.e48406e0fc18dc4199017bc30d68eccb.js": "/bgg-collection/precache-manifest.e48406e0fc18dc4199017bc30d68eccb.js",
+    "service-worker.js": "/bgg-collection/service-worker.js",
+    "static/css/2.d4b275d9.chunk.css.map": "/bgg-collection/static/css/2.d4b275d9.chunk.css.map",
+    "static/css/main.74e4d564.chunk.css.map": "/bgg-collection/static/css/main.74e4d564.chunk.css.map"
+  }
+}
