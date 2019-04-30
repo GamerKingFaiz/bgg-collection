@@ -61,3 +61,17 @@ a:visited {
 	color: white;
 	font-weight: bold;
 }
+
+#footer {
+	display: flex;
+	justify-content: center;
+	align-items: flex-end;
+	/* background: darkgray; */
+	height: 100px;
+	margin: 0 auto;
+	max-width: 1045px;
+}
+
+#footer span {
+	margin-bottom: 5px;
+}

@@ -61,6 +61,7 @@ class App extends Component {
 				accessor: 'name',
 				minWidth: 150,
 				maxWidth: 450,
+				filterable: true,
 				style: { 'whiteSpace': 'unset'}, // Allows word wrap
 				Cell: props => <div>
 								<a href={ 'https://boardgamegeek.com/boardgame/' + props.original.gameId } target="_blank" rel="noopener noreferrer">
@@ -93,17 +94,20 @@ class App extends Component {
 			{
 				Header: 'Min Players',
 				accessor: 'minPlayers',
+				filterable: true,
 				maxWidth: 100
 			},
 			{
 				Header: 'Max Players',
 				accessor: 'maxPlayers',
+				filterable: true,
 				defaultSortDesc: true,
 				maxWidth: 100
 			},
 			{
 				Header: 'Play Time',
 				accessor: 'playingTime',
+				filterable: true,
 				defaultSortDesc: true,
 				maxWidth: 100
 			},
@@ -121,13 +125,25 @@ class App extends Component {
 				<UsernameField />
 				<p className='tipText'>Tip: Hold shift when sorting to multi-sort!</p>
 				<ReactTable 
-					data={ this.state.gameList }
-					columns={ columns }
-					defaultSorted={ [{ id: "rank", desc: false }] }
-					defaultPageSize={ 25 }
-					noDataText= { 'No games found or you haven\'t entered your username yet' }
-					className='-highlight'
+					data = { this.state.gameList }
+					columns = { columns }
+					defaultSorted = { [{ id: "rank", desc: false }] }
+					minRows = { 5 }
+					defaultPageSize = { 50 }
+					noDataText = { 'No games found or you haven\'t entered your username yet' }
+					className = '-highlight'
+					defaultFilterMethod = {
+						/* Slightly modifying defaultFilterMethod. Changing startsWith to includes and putting a toLowerCase for both row and filter so case doesn't matter when the user searchs */
+						(filter, row) => {
+							const id = filter.pivotId || filter.id;
+							return row[id] !== undefined ? String(row[id]).toLowerCase().includes(filter.value.toLowerCase()) : true
+						}
+					}
+					
 				/>
+				<div id='footer'>
+					<span>Page created with <span role="img" aria-label="Red Heart">❤️</span></span>
+				</div>
 			</div>
 		)
 	}
