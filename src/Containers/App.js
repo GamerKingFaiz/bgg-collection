@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import './App.css';
+import UsernameField from '../Components/UsernameField';
 
 // Import React Table
-import ReactTable from 'react-table'
-import 'react-table/react-table.css'
+import ReactTable from 'react-table';
+import 'react-table/react-table.css';
 
 class App extends Component {
 
@@ -14,25 +15,31 @@ class App extends Component {
 		}
 	}
 
+	/* JSON Fetch that pulls games from the collection API and filters for owned games */
+	fetchCollection = (jsonUrl) => {
+		fetch(jsonUrl)
+			.then(response => response.json())
+			.then(games => {
+				let ownedGames = [];
+				ownedGames = games.filter(game => game.owned === true); // Filtering for only owned games 
+				ownedGames.forEach((game) => {
+					if (game.rank === -1) {
+						game.rank = 'N/A';
+					}
+				});
+				this.setState({ gameList: ownedGames });
+			})
+	}
+
 	componentDidMount() {
 		/* Grabbing the URL params */
 		let params = (new URL(document.location)).searchParams;
 		let username = params.get("username");
 		
-		let jsonUrl = 'https://bgg-json.azurewebsites.net/collection/' + username + '?grouped=true';
-
-		fetch(jsonUrl)
-		.then(response => response.json())
-		.then(games => {
-			let ownedGames = [];
-			ownedGames = games.filter(game => game.owned === true); // Filtering for only owned games 
-			ownedGames.forEach((game) => {
-				if (game.rank === -1) {
-					game.rank = 'N/A';
-				}
-			});
-			this.setState({ gameList: ownedGames });
-		})
+		if (username !== null) {
+			let jsonUrl = 'https://bgg-json.azurewebsites.net/collection/' + username + '?grouped=true';
+			this.fetchCollection(jsonUrl);
+		}
 	}
 
 	render() {
@@ -46,6 +53,7 @@ class App extends Component {
 				Header: '',
 				accessor: 'thumbnail',
 				maxWidth: 120,
+				sortable: false,
 				Cell: props => <img src={ props.value } height="64" alt="thumbnail" className='thumbnail' />
 			},
 			{
@@ -99,20 +107,28 @@ class App extends Component {
 				defaultSortDesc: true,
 				maxWidth: 100
 			},
-			{
-				Header: 'Comment',
-				accessor: 'userComment',
-				Cell: props => <div title={ props.value }>{ props.value }</div> // Longs comments will cutoff. Hover reveals tooltip with full comment
-			}
+			// {
+			// 	Header: 'Comment',
+			// 	accessor: 'userComment',
+			// 	Cell: props => <div title={ props.value }>{ props.value }</div> // Longs comments will cutoff. Hover reveals tooltip with full comment
+			// }
 		]
 
 		return (
-			<ReactTable 
-				data={ this.state.gameList }
-				columns={ columns }
-				defaultSorted={ [{ id: "rank", desc: false }] }
-				defaultPageSize={ 50 }
-			/>
+			<div className='container'>
+				<h1>Better BGG Collection</h1>
+				<p>Enter your BoardGameGeek username below to pull up your collection!</p>
+				<UsernameField />
+				<p className='tipText'>Tip: Hold shift when sorting to multi-sort!</p>
+				<ReactTable 
+					data={ this.state.gameList }
+					columns={ columns }
+					defaultSorted={ [{ id: "rank", desc: false }] }
+					defaultPageSize={ 25 }
+					noDataText= { 'No games found or you haven\'t entered your username yet' }
+					className='-highlight'
+				/>
+			</div>
 		)
 	}
 	
