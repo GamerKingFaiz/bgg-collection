@@ -66,13 +66,12 @@ class App extends Component {
 				maxWidth: 100,
 				Cell: props => 	<div className='ratingContainer'>
 									<div className='averageRating'
-										 style={{backgroundColor: props.value >= 9 ? '#249563'
-																: props.value >= 8 ?  '#2fc482'
-																: props.value >= 7 ?  '#1d8acd'
-																: props.value >= 5 ?  '#5369a2'
-																: props.value >= 3 ?  '#df4751'
+										 style={{backgroundColor: Math.round(10 * props.value)/10 >= 9 ? '#249563' // Rounding to the tenths place
+																: Math.round(10 * props.value)/10 >= 8 ?  '#2fc482'
+																: Math.round(10 * props.value)/10 >= 7 ?  '#1d8acd'
+																: Math.round(10 * props.value)/10 >= 5 ?  '#5369a2'
+																: Math.round(10 * props.value)/10 >= 3 ?  '#df4751'
 																: '#db303b'}}>
-										{/* Rounding to the tenths place */}
 										{ Math.round(10 * props.value)/10 }
 									</div>
 								</div>
