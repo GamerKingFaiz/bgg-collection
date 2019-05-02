@@ -31,7 +31,16 @@ class App extends Component {
 			})
 	}
 
+	addFilterPlaceholder = () => {
+		const filters = document.querySelectorAll("div.rt-th > input");
+		for (let filter of filters) {
+		  filter.placeholder = "Search...";
+		}
+	}
+
 	componentDidMount() {
+		this.addFilterPlaceholder();
+
 		/* Grabbing the URL params */
 		let params = (new URL(document.location)).searchParams;
 		let username = params.get("username");
@@ -142,7 +151,8 @@ class App extends Component {
 					
 				/>
 				<div id='footer'>
-					<span>Page created with <span role="img" aria-label="Red Heart">❤️</span></span>
+					<p>Page created with <span role="img" aria-label="Red Heart">❤️</span></p>
+					<p>Made possible by the <a href='https://bgg-json.azurewebsites.net/'>BGG JSON API</a> by <a href='https://blog.ewal.net/'>Erv Walter</a></p>
 				</div>
 			</div>
 		)

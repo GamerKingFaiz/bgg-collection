@@ -64,8 +64,9 @@ a:visited {
 
 #footer {
 	display: flex;
+	flex-direction: column;
 	justify-content: center;
-	align-items: flex-end;
+	align-items: center;
 	/* background: darkgray; */
 	height: 100px;
 	margin: 0 auto;
