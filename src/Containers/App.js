@@ -2,11 +2,21 @@ import React, { Component } from 'react';
 import './App.css';
 import UsernameField from '../Components/UsernameField';
 
-// Import React Table
+/* Import React Table */
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 
-
+/* Import Google Analytics */
+import ReactGA from 'react-ga';
+ReactGA.initialize('UA-139517114-1');
+ReactGA.pageview(window.location.pathname + window.location.search);
+/* Google Analytics Event */
+const urlParamGA = () => {
+    ReactGA.event({
+        category: 'Collection Request',
+        action: 'URL Param entered'
+      });
+}
 
 class App extends Component {
 
@@ -91,6 +101,7 @@ class App extends Component {
 		
 		/* This call is made for if the website is loaded with params attached already */
 		if (username !== null) {
+			urlParamGA();
 			/*******************************
 			This URL is using the cors-anywhere reverse proxy to add a CORS header to the BGG API
 			Source: https://github.com/Rob--W/cors-anywhere

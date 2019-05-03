@@ -1,12 +1,27 @@
 import React from 'react';
 import './UsernameField.css'
 
-
+/* Import Google Analytics */
+import ReactGA from 'react-ga';
+/* Google Analytics Events */
+const keypressGA = () => {
+    ReactGA.event({
+        category: 'Collection Request',
+        action: 'Enter key pressed'
+      });
+}
+const submitGA = () => {
+    ReactGA.event({
+        category: 'Collection Request',
+        action: 'Clicked Submit'
+      });
+}
 
 const UsernameField = ({ recursiveFetchAndWait}) => {
 
     const handleKeyPress = (event) => {
         if (event.key === 'Enter') {
+            keypressGA();
             recursiveFetchAndWait('https://cors-anywhere.herokuapp.com/https://api.geekdo.com/xmlapi2/collection?username=' + event.target.value + '&own=1&stats=1&excludesubtype=boardgameexpansion'); 
         }
     }
@@ -22,8 +37,8 @@ const UsernameField = ({ recursiveFetchAndWait}) => {
             />
             <button type="button"
                     onClick={ (event) => {
+                                submitGA();
                                 recursiveFetchAndWait('https://cors-anywhere.herokuapp.com/https://api.geekdo.com/xmlapi2/collection?username=' + document.querySelector('#searchBox').value + '&own=1&stats=1&excludesubtype=boardgameexpansion');
-                                
                             } }>
             Submit</button>
         </div>
