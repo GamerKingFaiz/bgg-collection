@@ -42,7 +42,7 @@ class App extends Component {
 	until it retrieves a 200 response and then sets the received array to the state array GameList.
 	********************************/
 	recursiveFetchAndWait = (url) => {
-		/* xml2js (https://www.npmjs.com/package/xml2js) */
+		/* node-xml2js (https://www.npmjs.com/package/xml2js) */
 		var parseString = require('xml2js').parseString;
 		this.setState({ loading: true });
 
@@ -257,7 +257,8 @@ class App extends Component {
 					defaultSorted = { [{ id: "stats[0].rating[0].ranks[0].rank[0].$.value", desc: false }] } // Page loads with rank as the default sorted column
 					showPaginationTop = { true }
 					minRows = { 5 }
-					defaultPageSize = { 50 }
+					pageSizeOptions = {[5, 10, 20, 25, 50, 100, 300, 500, 1000, 2000, 5000]}
+					defaultPageSize = { 300 }
 					loading = { this.state.loading }
 					noDataText = { 'No games found or you haven\'t entered your username yet' }
 					className = '-highlight'
