@@ -15,19 +15,58 @@ class App extends Component {
 		}
 	}
 
-	/* JSON Fetch that pulls games from the collection API and filters for owned games */
-	fetchCollection = (jsonUrl) => {
-		fetch(jsonUrl)
-			.then(response => response.json())
-			.then(games => {
-				let ownedGames = [];
-				ownedGames = games.filter(game => game.owned === true); // Filtering for only owned games 
-				ownedGames.forEach((game) => {
-					if (game.rank === -1) {
-						game.rank = 'N/A';
-					}
-				});
-				this.setState({ gameList: ownedGames });
+	/*******************************
+	New function to call setTimeout otherwise recursiveFetchAndWait() would be run again 
+	when you pass it to the default JS setTimeout function because it has a parameter.
+	********************************/
+	setTimeoutAsCallback = (callback) => {
+		setTimeout(callback, 5000);
+	}
+
+	/*******************************
+	Function that fetches the data. The BGG API returns response code 202 until all the data
+	has been retrieved. This function will wait an allotted amount of time and then retry
+	until it retrieves a 200 response and then sets the received array to the state array GameList.
+	********************************/
+	recursiveFetchAndWait = (url) => {
+		/* xml2js (https://www.npmjs.com/package/xml2js) */
+		var parseString = require('xml2js').parseString;
+
+		fetch(url)
+			.then(async resp => {
+				if (resp.status===200) { // Checking for response code 200
+					const xml = await resp.text();
+					return parseString(xml, (err, result) => { // xml2js: converts XML to JSON
+						if (result.items.$.totalitems !== '0') { // Only processing further if there are returned results
+							result.items.item.forEach(element => {
+								/* Going through the array and changing default values and converting string numbers to actual numbers */
+								if (element.stats[0].rating[0].ranks[0].rank[0].$.value === 'Not Ranked')
+									element.stats[0].rating[0].ranks[0].rank[0].$.value = 'N/A';
+								else {
+									element.stats[0].rating[0].ranks[0].rank[0].$.value = Number(element.stats[0].rating[0].ranks[0].rank[0].$.value);
+								}
+								element.stats[0].$.minplayers = Number(element.stats[0].$.minplayers);
+								if (isNaN(element.stats[0].$.minplayers))
+									element.stats[0].$.minplayers = '--';
+
+								element.stats[0].$.maxplayers = Number(element.stats[0].$.maxplayers);
+								if (isNaN(element.stats[0].$.maxplayers))
+									element.stats[0].$.maxplayers = '--';
+
+								element.stats[0].$.maxplaytime = Number(element.stats[0].$.maxplaytime);
+								if (isNaN(element.stats[0].$.maxplaytime))
+									element.stats[0].$.maxplaytime = '--';
+
+								if (element.yearpublished === undefined)
+									element.yearpublished = ['--'];
+							});
+							this.setState({ gameList: result.items.item });
+						}
+					});
+				} else if (resp.status===202) { // If the status response was 202 (API still retrieving data), call the fetch again after a set timeout
+					this.setTimeoutAsCallback(() => this.recursiveFetchAndWait(url));
+				} else
+					console.log(resp.status);
 			})
 	}
 
@@ -45,9 +84,14 @@ class App extends Component {
 		let params = (new URL(document.location)).searchParams;
 		let username = params.get("username");
 		
+		/* This call is made for if the website is loaded with params attached already */
 		if (username !== null) {
-			let jsonUrl = 'https://bgg-json.azurewebsites.net/collection/' + username + '?grouped=true';
-			this.fetchCollection(jsonUrl);
+			/*******************************
+			This URL is using the cors-anywhere reverse proxy to add a CORS header to the BGG API
+			Source: https://github.com/Rob--W/cors-anywhere
+			*******************************/
+			let xmlUrl = 'https://cors-anywhere.herokuapp.com/https://api.geekdo.com/xmlapi2/collection?username=' + username + '&own=1&stats=1&excludesubtype=boardgameexpansion';
+			this.recursiveFetchAndWait(xmlUrl);
 		}
 	}
 
@@ -55,32 +99,47 @@ class App extends Component {
 		const columns = [
 			{
 				Header: 'Rank',
-				accessor: 'rank',
-				maxWidth: 75
+				accessor: 'stats[0].rating[0].ranks[0].rank[0].$.value',
+				maxWidth: 75,
+				sortMethod: (a,b) => {
+					// force null, undefined, and N/A to the bottom
+					a = a === null || a === undefined || a === 'N/A' ? Infinity : a
+					b = b === null || b === undefined || b === 'N/A' ? Infinity : b
+					// Return either 1 or -1 to indicate a sort priority
+					if (a > b) {
+						return 1
+					}
+					if (a < b) {
+						return -1
+					}
+					// returning 0, undefined or any falsey value will use subsequent sorts or
+					// the index as a tiebreaker
+					return 0
+				}
 			},
 			{
 				Header: '',
-				accessor: 'thumbnail',
+				accessor: 'thumbnail[0]',
 				maxWidth: 120,
 				sortable: false,
 				Cell: props => <img src={ props.value } height="64" alt="thumbnail" className='thumbnail' />
 			},
 			{
 				Header: 'Title',
-				accessor: 'name',
+				accessor: 'name[0]._',
 				minWidth: 150,
 				maxWidth: 450,
 				filterable: true,
 				style: { 'whiteSpace': 'unset'}, // Allows word wrap
 				Cell: props => <div>
-								<a href={ 'https://boardgamegeek.com/boardgame/' + props.original.gameId } target="_blank" rel="noopener noreferrer">
+								<a href={ 'https://boardgamegeek.com/boardgame/' + props.original.$.objectid } target="_blank" rel="noopener noreferrer">
 									{ props.value }
-								</a> <span className='yearPublished'>({ props.original.yearPublished })</span>
+								</a> <span className='yearPublished'>({ props.original.yearpublished[0] })</span>
 							   </div>
 			},
 			{
 				Header: 'Avg Rating',
-				accessor: 'averageRating',
+				accessor: 'stats[0].rating[0].average[0].$.value',
 				defaultSortDesc: true,
 				maxWidth: 100,
 				Cell: props => 	<div className='ratingContainer'>
@@ -102,23 +161,69 @@ class App extends Component {
 			},
 			{
 				Header: 'Min Players',
-				accessor: 'minPlayers',
+				accessor: 'stats[0].$.minplayers',
 				filterable: true,
-				maxWidth: 100
+				maxWidth: 100,
+				sortMethod: (a,b) => {
+					// force null, undefined, and N/A to the bottom
+					a = a === null || a === undefined || a === '--' ? Infinity : a
+					b = b === null || b === undefined || b === '--' ? Infinity : b
+					// Return either 1 or -1 to indicate a sort priority
+					if (a > b) {
+						return 1
+					}
+					if (a < b) {
+						return -1
+					}
+					// returning 0, undefined or any falsey value will use subsequent sorts or
+					// the index as a tiebreaker
+					return 0
+				}
 			},
 			{
 				Header: 'Max Players',
-				accessor: 'maxPlayers',
+				accessor: 'stats[0].$.maxplayers',
 				filterable: true,
 				defaultSortDesc: true,
-				maxWidth: 100
+				maxWidth: 100,
+				sortMethod: (a,b) => {
+					// force null, undefined, and N/A to the bottom
+					a = a === null || a === undefined || a === '--' ? -Infinity : a
+					b = b === null || b === undefined || b === '--' ? -Infinity : b
+					// Return either 1 or -1 to indicate a sort priority
+					if (a > b) {
+						return 1
+					}
+					if (a < b) {
+						return -1
+					}
+					// returning 0, undefined or any falsey value will use subsequent sorts or
+					// the index as a tiebreaker
+					return 0
+				}
 			},
 			{
 				Header: 'Play Time',
-				accessor: 'playingTime',
+				accessor: 'stats[0].$.maxplaytime',
 				filterable: true,
 				defaultSortDesc: true,
-				maxWidth: 100
+				maxWidth: 100,
+				sortMethod: (a,b) => {
+					// force null, undefined, and N/A to the bottom
+					a = a === null || a === undefined || a === '--' ? -Infinity : a
+					b = b === null || b === undefined || b === '--' ? -Infinity : b
+					// Return either 1 or -1 to indicate a sort priority
+					if (a > b) {
+						return 1
+					}
+					if (a < b) {
+						return -1
+					}
+					// returning 0, undefined or any falsey value will use subsequent sorts or
+					// the index as a tiebreaker
+					return 0
+				},
+				Cell: props => <span>{props.value} Min</span>
 			},
 			// {
 			// 	Header: 'Comment',
@@ -136,13 +241,13 @@ class App extends Component {
 				<ReactTable 
 					data = { this.state.gameList }
 					columns = { columns }
-					defaultSorted = { [{ id: "rank", desc: false }] }
+					defaultSorted = { [{ id: "stats[0].rating[0].ranks[0].rank[0].$.value", desc: false }] } // Page loads with rank as the default sorted column
 					minRows = { 5 }
 					defaultPageSize = { 50 }
 					noDataText = { 'No games found or you haven\'t entered your username yet' }
 					className = '-highlight'
 					defaultFilterMethod = {
-						/* Slightly modifying defaultFilterMethod. Changing startsWith to includes and putting a toLowerCase for both row and filter so case doesn't matter when the user searchs */
+						/* Slightly modifying defaultFilterMethod. Changing startsWith to includes and putting a toLowerCase for both row and filter so case sensitivity doesn't matter when the user searchs */
 						(filter, row) => {
 							const id = filter.pivotId || filter.id;
 							return row[id] !== undefined ? String(row[id]).toLowerCase().includes(filter.value.toLowerCase()) : true
@@ -152,7 +257,6 @@ class App extends Component {
 				/>
 				<div id='footer'>
 					<p>Page created with <span role="img" aria-label="Red Heart">❤️</span></p>
-					<p>Made possible by the <a href='https://bgg-json.azurewebsites.net/'>BGG JSON API</a> by <a href='https://blog.ewal.net/'>Erv Walter</a></p>
 				</div>
 			</div>
 		)
