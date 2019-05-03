@@ -24,7 +24,8 @@ class App extends Component {
 		super();
 		this.state = {
 			gameList: [],
-			loading: false
+			loading: false,
+			PageSize: 300
 		}
 	}
 
@@ -98,10 +99,16 @@ class App extends Component {
 		/* Grabbing the URL params */
 		let params = (new URL(document.location)).searchParams;
 		let username = params.get("username");
+
+		/* Allowing the user to specify size of the page onLoad */
+		let rows = params.get("rows");
+		if (rows !== null) {
+			this.setState({ PageSize: Number(rows) });
+		}
 		
 		/* This call is made for if the website is loaded with params attached already */
 		if (username !== null) {
-			urlParamGA();
+			urlParamGA(); // Google Analytics
 			/*******************************
 			This URL is using the cors-anywhere reverse proxy to add a CORS header to the BGG API
 			Source: https://github.com/Rob--W/cors-anywhere
@@ -257,7 +264,8 @@ class App extends Component {
 					defaultSorted = { [{ id: "stats[0].rating[0].ranks[0].rank[0].$.value", desc: false }] } // Page loads with rank as the default sorted column
 					showPaginationTop = { true }
 					minRows = { 5 }
-					pageSizeOptions = {[5, 10, 20, 25, 50, 100, 300, 500, 1000, 2000, 5000]}
+					pageSizeOptions = {[5, 10, 20, 25, 50, 100, 300, 500, 1000, 2000, 5000, 10000]}
+					pageSize = { this.state.PageSize }
 					defaultPageSize = { 300 }
 					loading = { this.state.loading }
 					noDataText = { 'No games found or you haven\'t entered your username yet' }

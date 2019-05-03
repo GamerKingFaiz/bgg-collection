@@ -21,7 +21,7 @@ const UsernameField = ({ recursiveFetchAndWait}) => {
 
     const handleKeyPress = (event) => {
         if (event.key === 'Enter') {
-            keypressGA();
+            keypressGA(); // Google Analytics
             recursiveFetchAndWait('https://cors-anywhere.herokuapp.com/https://api.geekdo.com/xmlapi2/collection?username=' + event.target.value + '&own=1&stats=1&excludesubtype=boardgameexpansion'); 
         }
     }
@@ -37,7 +37,7 @@ const UsernameField = ({ recursiveFetchAndWait}) => {
             />
             <button type="button"
                     onClick={ (event) => {
-                                submitGA();
+                                submitGA(); // Google Analytics
                                 recursiveFetchAndWait('https://cors-anywhere.herokuapp.com/https://api.geekdo.com/xmlapi2/collection?username=' + document.querySelector('#searchBox').value + '&own=1&stats=1&excludesubtype=boardgameexpansion');
                             } }>
             Submit</button>
