@@ -6,6 +6,8 @@ import UsernameField from '../Components/UsernameField';
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 
+
+
 class App extends Component {
 
 	constructor() {
@@ -37,8 +39,8 @@ class App extends Component {
 		fetch(url)
 			.then(async resp => {
 				if (resp.status===200) { // Checking for response code 200
-					this.setState({ loading: false });
 					const xml = await resp.text();
+					this.setState({ loading: false });
 					return parseString(xml, (err, result) => { // xml2js: converts XML to JSON
 						if (result.items.$.totalitems !== '0') { // Only processing further if there are returned results
 							result.items.item.forEach(element => {
@@ -165,7 +167,6 @@ class App extends Component {
 			{
 				Header: 'Min Players',
 				accessor: 'stats[0].$.minplayers',
-				filterable: true,
 				maxWidth: 100,
 				sortMethod: (a,b) => {
 					// force null, undefined, and N/A to the bottom
@@ -186,7 +187,6 @@ class App extends Component {
 			{
 				Header: 'Max Players',
 				accessor: 'stats[0].$.maxplayers',
-				filterable: true,
 				defaultSortDesc: true,
 				maxWidth: 100,
 				sortMethod: (a,b) => {
@@ -208,7 +208,6 @@ class App extends Component {
 			{
 				Header: 'Play Time',
 				accessor: 'stats[0].$.maxplaytime',
-				filterable: true,
 				defaultSortDesc: true,
 				maxWidth: 100,
 				sortMethod: (a,b) => {
@@ -237,9 +236,9 @@ class App extends Component {
 
 		return (
 			<div className='container'>
-				<h1>Better BGG Collection</h1>
+				<h1><a className="h1Link" href='.'>Better BGG Collection</a></h1>
 				<p className='description'>Enter your BoardGameGeek username below to pull up your collection!</p>
-				<UsernameField />
+				<UsernameField recursiveFetchAndWait = { this.recursiveFetchAndWait }/>
 				<p className='tipText'>Tip: Hold shift when sorting to multi-sort!</p>
 				<ReactTable 
 					data = { this.state.gameList }
@@ -257,9 +256,7 @@ class App extends Component {
 							const id = filter.pivotId || filter.id;
 							return row[id] !== undefined ? String(row[id]).toLowerCase().includes(filter.value.toLowerCase()) : true
 						}
-					}
-					
-				/>
+					}/>
 				<div id='footer'>
 					<p>Page created with <span role="img" aria-label="Red Heart">❤️</span></p>
 				</div>

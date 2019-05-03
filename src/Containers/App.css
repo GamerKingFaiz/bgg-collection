@@ -2,6 +2,15 @@
 	text-align: center;
 }
 
+.h1Link:hover,
+.h1Link:visited:hover {
+	color: inherit;
+}
+
+.h1Link:visited {
+	color: inherit;
+}
+
 .tipText {
 	text-align: center;
 	font-style: italic;
