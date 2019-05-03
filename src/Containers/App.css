@@ -12,20 +12,29 @@
 	.tipText {
 	  display: none;
 	}
+	.description {
+		padding: 0px 20px;
+	}
   }
 
 .ReactTable {
 	margin: 0 auto;
-	max-width: 1045px;
+	max-width: 998px;
 }
 
 .rt-tr { /* React table-Table row (each row in the table) */
-	text-align: center;
 	align-items: center;
 }
 
 .thumbnail {
-	box-shadow: 0 0 12px rgba(0,0,0,0.6);
+	box-shadow: 2px 2px 3px rgba(0,0,0,0.4);
+	float: right;
+}
+
+.title {
+	text-align: left;
+	float: left;
+	padding-left: 20px;
 }
 
 a {
@@ -67,12 +76,7 @@ a:visited {
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	/* background: darkgray; */
 	height: 100px;
 	margin: 0 auto;
-	max-width: 1045px;
-}
-
-#footer span {
-	margin-bottom: 5px;
+	max-width: 998px;
 }

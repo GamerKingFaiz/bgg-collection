@@ -11,7 +11,8 @@ class App extends Component {
 	constructor() {
 		super();
 		this.state = {
-			gameList: []
+			gameList: [],
+			loading: false
 		}
 	}
 
@@ -31,10 +32,12 @@ class App extends Component {
 	recursiveFetchAndWait = (url) => {
 		/* xml2js (https://www.npmjs.com/package/xml2js) */
 		var parseString = require('xml2js').parseString;
+		this.setState({ loading: true });
 
 		fetch(url)
 			.then(async resp => {
 				if (resp.status===200) { // Checking for response code 200
+					this.setState({ loading: false });
 					const xml = await resp.text();
 					return parseString(xml, (err, result) => { // xml2js: converts XML to JSON
 						if (result.items.$.totalitems !== '0') { // Only processing further if there are returned results
@@ -120,9 +123,9 @@ class App extends Component {
 			{
 				Header: '',
 				accessor: 'thumbnail[0]',
-				maxWidth: 120,
+				maxWidth: 75,
 				sortable: false,
-				Cell: props => <img src={ props.value } height="64" alt="thumbnail" className='thumbnail' />
+				Cell: props => <img src={ props.value } width="64" alt="thumbnail" className='thumbnail' />
 			},
 			{
 				Header: 'Title',
@@ -131,9 +134,9 @@ class App extends Component {
 				maxWidth: 450,
 				filterable: true,
 				style: { 'whiteSpace': 'unset'}, // Allows word wrap
-				Cell: props => <div>
+				Cell: props => <div className='title'>
 								<a href={ 'https://boardgamegeek.com/boardgame/' + props.original.$.objectid } target="_blank" rel="noopener noreferrer">
-									{ props.value }
+									{ props.value}
 								</a> <span className='yearPublished'>({ props.original.yearpublished[0] })</span>
 							   </div>
 			},
@@ -235,15 +238,17 @@ class App extends Component {
 		return (
 			<div className='container'>
 				<h1>Better BGG Collection</h1>
-				<p>Enter your BoardGameGeek username below to pull up your collection!</p>
+				<p className='description'>Enter your BoardGameGeek username below to pull up your collection!</p>
 				<UsernameField />
 				<p className='tipText'>Tip: Hold shift when sorting to multi-sort!</p>
 				<ReactTable 
 					data = { this.state.gameList }
 					columns = { columns }
 					defaultSorted = { [{ id: "stats[0].rating[0].ranks[0].rank[0].$.value", desc: false }] } // Page loads with rank as the default sorted column
+					showPaginationTop = { true }
 					minRows = { 5 }
 					defaultPageSize = { 50 }
+					loading = { this.state.loading }
 					noDataText = { 'No games found or you haven\'t entered your username yet' }
 					className = '-highlight'
 					defaultFilterMethod = {
