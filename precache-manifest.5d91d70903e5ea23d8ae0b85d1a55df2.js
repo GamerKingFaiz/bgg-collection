@@ -1,6 +1,6 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "5420b92ee4a3291e5980fea5d4588a0c",
+    "revision": "0731cfdb90cdb47ef90e351c4861515b",
     "url": "/bgg-collection/index.html"
   },
   {
@@ -8,7 +8,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/bgg-collection/static/css/2.d4b275d9.chunk.css"
   },
   {
-    "revision": "79ff5893505a71c97186",
+    "revision": "62273f2eb63fe87e0257",
     "url": "/bgg-collection/static/css/main.73373330.chunk.css"
   },
   {
@@ -16,8 +16,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/bgg-collection/static/js/2.c36d156b.chunk.js"
   },
   {
-    "revision": "79ff5893505a71c97186",
-    "url": "/bgg-collection/static/js/main.7971be2f.chunk.js"
+    "revision": "62273f2eb63fe87e0257",
+    "url": "/bgg-collection/static/js/main.f42a1605.chunk.js"
   },
   {
     "revision": "7200ee5144944743b419",
