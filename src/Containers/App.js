@@ -25,7 +25,7 @@ class App extends Component {
 		this.state = {
 			gameList: [],
 			loading: false,
-			PageSize: 300
+			PageSize: undefined
 		}
 	}
 
@@ -265,8 +265,8 @@ class App extends Component {
 					showPaginationTop = { true }
 					minRows = { 5 }
 					pageSizeOptions = {[5, 10, 20, 25, 50, 100, 300, 500, 1000, 2000, 5000, 10000]}
-					pageSize = { this.state.PageSize }
 					defaultPageSize = { 300 }
+					pageSize = { this.state.PageSize }
 					loading = { this.state.loading }
 					noDataText = { 'No games found or you haven\'t entered your username yet' }
 					className = '-highlight'
