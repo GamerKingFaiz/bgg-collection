@@ -25,7 +25,7 @@ class App extends Component {
 		this.state = {
 			gameList: [],
 			loading: false,
-			PageSize: undefined
+			pageSize: undefined // React Table default
 		}
 	}
 
@@ -48,9 +48,9 @@ class App extends Component {
 		this.setState({ loading: true });
 
 		fetch(url)
-			.then(async resp => {
-				if (resp.status===200) { // Checking for response code 200
-					const xml = await resp.text();
+			.then(async response => {
+				if (response.status === 200) { // Checking for response code 200
+					const xml = await response.text();
 					this.setState({ loading: false });
 					return parseString(xml, (err, result) => { // xml2js: converts XML to JSON
 						if (result.items.$.totalitems !== '0') { // Only processing further if there are returned results
@@ -79,10 +79,10 @@ class App extends Component {
 							this.setState({ gameList: result.items.item });
 						}
 					});
-				} else if (resp.status===202) { // If the status response was 202 (API still retrieving data), call the fetch again after a set timeout
+				} else if (response.status === 202) { // If the status response was 202 (API still retrieving data), call the fetch again after a set timeout
 					this.setTimeoutAsCallback(() => this.recursiveFetchAndWait(url));
 				} else
-					console.log(resp.status);
+					console.log(response.status);
 			})
 	}
 
@@ -103,7 +103,7 @@ class App extends Component {
 		/* Allowing the user to specify size of the page onLoad */
 		let rows = params.get("rows");
 		if (rows !== null) {
-			this.setState({ PageSize: Number(rows) });
+			this.setState({ pageSize: Number(rows) });
 		}
 		
 		/* This call is made for if the website is loaded with params attached already */
@@ -266,7 +266,7 @@ class App extends Component {
 					minRows = { 5 }
 					pageSizeOptions = {[5, 10, 20, 25, 50, 100, 300, 500, 1000, 2000, 5000, 10000]}
 					defaultPageSize = { 300 }
-					pageSize = { this.state.PageSize }
+					pageSize = { this.state.pageSize }
 					loading = { this.state.loading }
 					noDataText = { 'No games found or you haven\'t entered your username yet' }
 					className = '-highlight'
