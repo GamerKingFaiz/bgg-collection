@@ -2,6 +2,9 @@ import React, { Component } from 'react';
 import './App.css';
 import UsernameField from '../Components/UsernameField';
 
+/* node-xml2js (https://www.npmjs.com/package/xml2js) */
+import XML2JS from 'xml2js'
+
 /* Import React Table */
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
@@ -43,8 +46,6 @@ class App extends Component {
 	until it retrieves a 200 response and then sets the received array to the state array GameList.
 	********************************/
 	recursiveFetchAndWait = (url) => {
-		/* node-xml2js (https://www.npmjs.com/package/xml2js) */
-		var parseString = require('xml2js').parseString;
 		this.setState({ loading: true });
 
 		fetch(url)
@@ -52,7 +53,7 @@ class App extends Component {
 				if (response.status === 200) { // Checking for response code 200
 					const xml = await response.text();
 					this.setState({ loading: false });
-					return parseString(xml, (err, result) => { // xml2js: converts XML to JSON
+					return XML2JS.parseString(xml, (err, result) => { // xml2js: converts XML to JSON
 						if (result.items.$.totalitems !== '0') { // Only processing further if there are returned results
 							result.items.item.forEach(element => {
 								/* Going through the array and changing default values and converting string numbers to actual numbers */
