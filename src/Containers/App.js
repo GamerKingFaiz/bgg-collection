@@ -187,8 +187,8 @@ const App = () => {
 										: Math.round(10 * props.value)/10 >= 7 ?  '#1d8acd'
 										: Math.round(10 * props.value)/10 >= 5 ?  '#5369a2'
 										: Math.round(10 * props.value)/10 >= 3 ?  '#df4751'
-										: '#db303b'}}>
-
+										: '#db303b'
+								}}>
 									{ /* The average rating number to be displayd */ }
 									{ Math.round(10 * props.value)/10 }
 									
@@ -262,7 +262,16 @@ const App = () => {
 			Header: 'Weight',
 			accessor: 'statistics.averageweight[0].$.value',
 			maxWidth: 100,
-			Cell: props => <span>{ props.value } / 5</span>
+			Cell: props => 	<strong><span
+								style={{color:
+									Math.round(100 * props.value)/100 >=5 ? '#ff6b26'
+									: Math.round(100 * props.value)/100 >=4 ? '#ff6b26'
+									: Math.round(100 * props.value)/100 >=3 ? '#ff6b26'
+									: Math.round(100 * props.value)/100 >=2 ? '#5bda98'
+									: '#5bda98'
+							}}>
+								{ Math.round(100 * props.value)/100 }</span> / 5</strong>
+							
 		}
 	]
 
