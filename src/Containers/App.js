@@ -48,37 +48,50 @@ const App = () => {
 				.then(async response => {
 					if (response.status === 200) { // Checking for response code 200
 						const xml = await response.text();
-						setLoading(false);
+						// setLoading(false);
 						return XML2JS.parseString(xml, (err, result) => { // xml2js: converts XML to JSON
 							if (result.items.$.totalitems !== '0') { // Only processing further if there are returned results
 								result.items.item.forEach(game => {
-									/* Going through the array and changing default values and converting string numbers to actual numbers */
-									if (game.stats[0].rating[0].ranks[0].rank[0].$.value === 'Not Ranked')
-										game.stats[0].rating[0].ranks[0].rank[0].$.value = 'N/A';
-									else {
-										game.stats[0].rating[0].ranks[0].rank[0].$.value = Number(game.stats[0].rating[0].ranks[0].rank[0].$.value);
-									}
-	
-									game.stats[0].$.minplayers = Number(game.stats[0].$.minplayers);
-									if (isNaN(game.stats[0].$.minplayers))
-										game.stats[0].$.minplayers = '--';
-	
-									game.stats[0].$.maxplayers = Number(game.stats[0].$.maxplayers);
-									if (isNaN(game.stats[0].$.maxplayers))
-										game.stats[0].$.maxplayers = '--';
-	
-									game.stats[0].$.maxplaytime = Number(game.stats[0].$.maxplaytime);
-									if (isNaN(game.stats[0].$.maxplaytime))
-										game.stats[0].$.maxplaytime = '--';
-	
-									if (game.yearpublished === undefined)
-										game.yearpublished = ['--'];
+									/* Fetching the statistics from a separate API, because the base API doesn't include stats */
+									fetch('https://cors-anywhere.herokuapp.com/https://www.boardgamegeek.com/xmlapi2/thing?id=' + game.$.objectid + '&stats=1')
+									.then (async response => {
+										const xml = await response.text();
+										setLoading(false);
+										return XML2JS.parseString(xml, (err, result) => {
+											game.statistics = result.items.item[0].statistics[0].ratings[0];
+
+											/* Going through the array and changing default values and converting string numbers to actual numbers */
+											if (game.stats[0].rating[0].ranks[0].rank[0].$.value === 'Not Ranked')
+												game.stats[0].rating[0].ranks[0].rank[0].$.value = 'N/A';
+											else {
+												game.stats[0].rating[0].ranks[0].rank[0].$.value = Number(game.stats[0].rating[0].ranks[0].rank[0].$.value);
+											}
+			
+											game.stats[0].$.minplayers = Number(game.stats[0].$.minplayers);
+											if (isNaN(game.stats[0].$.minplayers))
+												game.stats[0].$.minplayers = '--';
+			
+											game.stats[0].$.maxplayers = Number(game.stats[0].$.maxplayers);
+											if (isNaN(game.stats[0].$.maxplayers))
+												game.stats[0].$.maxplayers = '--';
+			
+											game.stats[0].$.maxplaytime = Number(game.stats[0].$.maxplaytime);
+											if (isNaN(game.stats[0].$.maxplaytime))
+												game.stats[0].$.maxplaytime = '--';
+			
+											if (game.yearpublished === undefined)
+												game.yearpublished = ['--'];
+
+											setGameList(oldArray => [...oldArray, game]);
+										});
+									});
 								});
-								setGameList(result.items.item)
 							}
 						});
+
 					} else if (response.status === 202) { // If the status response was 202 (API still retrieving data), call the fetch again after a set timeout
 						setTimeoutAsCallback(() => recursiveFetchAndWait(url));
+
 					} else
 						console.log(response.status);
 				})
@@ -94,7 +107,7 @@ const App = () => {
 		}
 	}
 
-	useEffect(() => {
+	useEffect(() => { // React hook that replaced ComponentDidMount
 		addFilterPlaceholder();
 
 		/* Grabbing the URL params */
@@ -245,6 +258,12 @@ const App = () => {
 			},
 			Cell: props => <span>{props.value} Min</span>
 		},
+		{
+			Header: 'Weight',
+			accessor: 'statistics.averageweight[0].$.value',
+			maxWidth: 100,
+			Cell: props => <span>{ props.value } / 5</span>
+		}
 	]
 
 	return (
