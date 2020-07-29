@@ -1,4 +1,5 @@
 import React from 'react';
+import { COLLECTION_ENDPOINT } from '../utils/urlConstants';
 import './UsernameField.css'
 
 /* Import Google Analytics */
@@ -23,7 +24,7 @@ const UsernameField = ({ recursiveFetchAndWait, setGameList}) => {
         if (event.key === 'Enter') {
             keypressGA(); // Google Analytics
             setGameList([]);
-            recursiveFetchAndWait('https://cryptic-brushlands-34819.herokuapp.com/https://api.geekdo.com/xmlapi2/collection?username=' + event.target.value + '&own=1&stats=1&excludesubtype=boardgameexpansion'); 
+            recursiveFetchAndWait(COLLECTION_ENDPOINT + event.target.value); 
         }
     }
 
@@ -40,7 +41,7 @@ const UsernameField = ({ recursiveFetchAndWait, setGameList}) => {
                     onClick={ (event) => {
                                 submitGA(); // Google Analytics
                                 setGameList([]);
-                                recursiveFetchAndWait('https://cryptic-brushlands-34819.herokuapp.com/https://api.geekdo.com/xmlapi2/collection?username=' + document.querySelector('#searchBox').value + '&own=1&stats=1&excludesubtype=boardgameexpansion');
+                                recursiveFetchAndWait(COLLECTION_ENDPOINT + document.querySelector('#searchBox').value);
                             } }>
             Submit</button>
         </div>
