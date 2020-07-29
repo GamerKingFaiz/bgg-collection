@@ -25,7 +25,7 @@ const App = () => {
 
 	const [gameList, setGameList] = useState([]);
 	const [loading, setLoading] = useState(false);
-	const [pageSize, setPageSize] = useState(undefined);
+	const [pageSize, setPageSize] = useState(undefined); // React Table default
 
 	/*******************************
 	New function to call setTimeout otherwise recursiveFetchAndWait() would be run again 
@@ -36,65 +36,75 @@ const App = () => {
 	}
 
 	/*******************************
-	Function that fetches the data. The BGG API returns response code 202 until all the data
-	has been retrieved. This function will wait an allotted amount of time and then retry
-	until it retrieves a 200 response and then sets the received array to the state array GameList.
+	Function that fetches the data. The Collection endpoint returns response code 202 until all the data
+	has been retrieved. This function will wait an allotted amount of time and then retry until it
+	retrieves a 200 response. Then the Things Items endpoint is called to gather additional statistics.
+	Finally the received array is added to the state array gameList.
 	********************************/
 	const recursiveFetchAndWait = useCallback(
 		(url) => {
 			setLoading(true);
 	
 			fetch(url)
-				.then(async response => {
-					if (response.status === 200) { // Checking for response code 200
-						const xml = await response.text();
-						// setLoading(false);
-						return XML2JS.parseString(xml, (err, result) => { // xml2js: converts XML to JSON
-							if (result.items.$.totalitems !== '0') { // Only processing further if there are returned results
-								result.items.item.forEach(game => {
-									/* Fetching the statistics from a separate API, because the base API doesn't include stats */
-									fetch('https://cors-anywhere.herokuapp.com/https://www.boardgamegeek.com/xmlapi2/thing?id=' + game.$.objectid + '&stats=1')
-									.then (async response => {
-										const xml = await response.text();
-										setLoading(false);
-										return XML2JS.parseString(xml, (err, result) => {
-											game.statistics = result.items.item[0].statistics[0].ratings[0];
+			.then(response => {
+				if (response.status === 200) { // Checking for response code 200
+					return response.text();
 
-											/* Going through the array and changing default values and converting string numbers to actual numbers */
-											if (game.stats[0].rating[0].ranks[0].rank[0].$.value === 'Not Ranked')
-												game.stats[0].rating[0].ranks[0].rank[0].$.value = 'N/A';
-											else {
-												game.stats[0].rating[0].ranks[0].rank[0].$.value = Number(game.stats[0].rating[0].ranks[0].rank[0].$.value);
-											}
-			
-											game.stats[0].$.minplayers = Number(game.stats[0].$.minplayers);
-											if (isNaN(game.stats[0].$.minplayers))
-												game.stats[0].$.minplayers = '--';
-			
-											game.stats[0].$.maxplayers = Number(game.stats[0].$.maxplayers);
-											if (isNaN(game.stats[0].$.maxplayers))
-												game.stats[0].$.maxplayers = '--';
-			
-											game.stats[0].$.maxplaytime = Number(game.stats[0].$.maxplaytime);
-											if (isNaN(game.stats[0].$.maxplaytime))
-												game.stats[0].$.maxplaytime = '--';
-			
-											if (game.yearpublished === undefined)
-												game.yearpublished = ['--'];
+				} else if (response.status === 202) { // If the status response was 202 (API still retrieving data), call the fetch again after a set timeout
+					setTimeoutAsCallback(() => recursiveFetchAndWait(url));
 
-											setGameList(oldArray => [...oldArray, game]);
-										});
-									});
-								});
-							}
+				} else
+					console.log('error: ', response.status);
+			})
+
+			.then(data => {
+				let gameIds = [];
+
+				XML2JS.parseString(data, (err, result) => { // xml2js: converts XML to JSON
+					if (result.items.$.totalitems !== '0') { // Only processing further if there are returned results
+						result.items.item.forEach(game => {
+							gameIds.push(game.$.objectid);
 						});
-
-					} else if (response.status === 202) { // If the status response was 202 (API still retrieving data), call the fetch again after a set timeout
-						setTimeoutAsCallback(() => recursiveFetchAndWait(url));
-
-					} else
-						console.log(response.status);
+					}
 				})
+
+				return fetch('https://cryptic-brushlands-34819.herokuapp.com/https://boardgamegeek.com/xmlapi2/thing?stats=1&id=' + gameIds.join());
+			})
+
+			.then(response => {
+				return response.text();
+			})
+
+			.then(xml => {
+				return XML2JS.parseString(xml, (err, result) => {
+					/* Going through the array and changing default values and converting string numbers to actual numbers */
+					result.items.item.forEach(game => {
+						if (game.statistics[0].ratings[0].ranks[0].rank[0].$.value === 'Not Ranked')
+							game.statistics[0].ratings[0].ranks[0].rank[0].$.value = 'N/A';
+						else {
+							game.statistics[0].ratings[0].ranks[0].rank[0].$.value = Number(game.statistics[0].ratings[0].ranks[0].rank[0].$.value);
+						}
+
+						game.minplayers[0].$.value = Number(game.minplayers[0].$.value);
+						if (isNaN(game.minplayers[0].$.value))
+							game.stats[0].$.minplayers = '--';
+
+						game.maxplayers[0].$.value = Number(game.maxplayers[0].$.value);
+						if (isNaN(game.maxplayers[0].$.value))
+							game.maxplayers[0].$.value = '--';
+
+						game.maxplaytime[0].$.value = Number(game.maxplaytime[0].$.value);
+						if (isNaN(game.maxplaytime[0].$.value))
+							game.maxplaytime[0].$.value = '--';
+
+						if (game.yearpublished[0].$.value === undefined)
+							game.yearpublished[0].$.value = ['--'];
+					})
+
+					setGameList(gameList => gameList.concat(result.items.item));
+					setLoading(false);
+				})
+			})
 		},
 		[],
 	);
@@ -127,7 +137,7 @@ const App = () => {
 			This URL is using the cors-anywhere reverse proxy to add a CORS header to the BGG API
 			Source: https://github.com/Rob--W/cors-anywhere
 			*******************************/
-			let xmlUrl = 'https://cors-anywhere.herokuapp.com/https://api.geekdo.com/xmlapi2/collection?username=' + username + '&own=1&stats=1&excludesubtype=boardgameexpansion';
+			let xmlUrl = 'https://cryptic-brushlands-34819.herokuapp.com/https://api.geekdo.com/xmlapi2/collection?username=' + username + '&own=1&stats=1&excludesubtype=boardgameexpansion';
 			recursiveFetchAndWait(xmlUrl);
 		}
 	}, [recursiveFetchAndWait]);
@@ -135,7 +145,7 @@ const App = () => {
 	const columns = [
 		{
 			Header: 'Rank',
-			accessor: 'stats[0].rating[0].ranks[0].rank[0].$.value',
+			accessor: 'statistics[0].ratings[0].ranks[0].rank[0].$.value',
 			maxWidth: 75,
 			sortMethod: (a,b) => {
 				// force null, undefined, and N/A to the bottom
@@ -162,20 +172,20 @@ const App = () => {
 		},
 		{
 			Header: 'Title',
-			accessor: 'name[0]._',
+			accessor: 'name[0].$.value',
 			minWidth: 150,
 			maxWidth: 450,
 			filterable: true,
 			style: { 'whiteSpace': 'unset'}, // Allows word wrap
 			Cell: props => <div className='title'>
-							<a href={ 'https://boardgamegeek.com/boardgame/' + props.original.$.objectid } target="_blank" rel="noopener noreferrer">
+							<a href={ 'https://boardgamegeek.com/boardgame/' + props.original.$.id } target="_blank" rel="noopener noreferrer">
 								{ props.value}
-							</a> <span className='yearPublished'>({ props.original.yearpublished[0] })</span>
+							</a> <span className='yearPublished'>({ props.original.yearpublished[0].$.value })</span>
 							</div>
 		},
 		{
 			Header: 'Avg Rating',
-			accessor: 'stats[0].rating[0].average[0].$.value',
+			accessor: 'statistics[0].ratings[0].average[0].$.value',
 			defaultSortDesc: true,
 			maxWidth: 100,
 			Cell: props => 	<div className='ratingContainer'>
@@ -197,7 +207,7 @@ const App = () => {
 		},
 		{
 			Header: 'Min Players',
-			accessor: 'stats[0].$.minplayers',
+			accessor: 'minplayers[0].$.value',
 			maxWidth: 100,
 			sortMethod: (a,b) => {
 				// force null, undefined, and N/A to the bottom
@@ -217,7 +227,7 @@ const App = () => {
 		},
 		{
 			Header: 'Max Players',
-			accessor: 'stats[0].$.maxplayers',
+			accessor: 'maxplayers[0].$.value',
 			defaultSortDesc: true,
 			maxWidth: 100,
 			sortMethod: (a,b) => {
@@ -238,7 +248,7 @@ const App = () => {
 		},
 		{
 			Header: 'Play Time',
-			accessor: 'stats[0].$.maxplaytime',
+			accessor: 'maxplaytime[0].$.value',
 			defaultSortDesc: true,
 			maxWidth: 100,
 			sortMethod: (a,b) => {
@@ -260,11 +270,11 @@ const App = () => {
 		},
 		{
 			Header: 'Weight',
-			accessor: 'statistics.averageweight[0].$.value',
+			accessor: 'statistics[0].ratings[0].averageweight[0].$.value',
 			maxWidth: 100,
 			Cell: props => 	<strong><span
 								style={{color:
-									Math.round(100 * props.value)/100 >=5 ? '#ff6b26'
+									Math.round(100 * props.value)/100 >=5 ? '#ff6b26' // Rounding to the hundreths place
 									: Math.round(100 * props.value)/100 >=4 ? '#ff6b26'
 									: Math.round(100 * props.value)/100 >=3 ? '#ff6b26'
 									: Math.round(100 * props.value)/100 >=2 ? '#5bda98'
@@ -279,12 +289,12 @@ const App = () => {
 		<div className='container'>
 			<h1><a className="h1Link" href='.'>Better BGG Collection</a></h1>
 			<p className='description'>Enter your BoardGameGeek username below to pull up your collection!</p>
-			<UsernameField recursiveFetchAndWait = { recursiveFetchAndWait }/>
+			<UsernameField recursiveFetchAndWait = { recursiveFetchAndWait } setGameList = { setGameList }/>
 			<p className='tipText'>Tip: Hold shift when sorting to multi-sort!</p>
 			<ReactTable 
 				data = { gameList }
 				columns = { columns }
-				defaultSorted = { [{ id: "stats[0].rating[0].ranks[0].rank[0].$.value", desc: false }] } // Page loads with rank as the default sorted column
+				defaultSorted = { [{ id: "statistics[0].ratings[0].ranks[0].rank[0].$.value", desc: false }] } // Page loads with rank as the default sorted column
 				showPaginationTop = { true }
 				minRows = { 5 }
 				pageSizeOptions = {[5, 10, 20, 25, 50, 100, 300, 500, 1000, 2000, 5000, 10000]}

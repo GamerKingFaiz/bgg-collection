@@ -17,12 +17,13 @@ const submitGA = () => {
       });
 }
 
-const UsernameField = ({ recursiveFetchAndWait}) => {
+const UsernameField = ({ recursiveFetchAndWait, setGameList}) => {
 
     const handleKeyPress = (event) => {
         if (event.key === 'Enter') {
             keypressGA(); // Google Analytics
-            recursiveFetchAndWait('https://cors-anywhere.herokuapp.com/https://api.geekdo.com/xmlapi2/collection?username=' + event.target.value + '&own=1&stats=1&excludesubtype=boardgameexpansion'); 
+            setGameList([]);
+            recursiveFetchAndWait('https://cryptic-brushlands-34819.herokuapp.com/https://api.geekdo.com/xmlapi2/collection?username=' + event.target.value + '&own=1&stats=1&excludesubtype=boardgameexpansion'); 
         }
     }
 
@@ -38,7 +39,8 @@ const UsernameField = ({ recursiveFetchAndWait}) => {
             <button type="button"
                     onClick={ (event) => {
                                 submitGA(); // Google Analytics
-                                recursiveFetchAndWait('https://cors-anywhere.herokuapp.com/https://api.geekdo.com/xmlapi2/collection?username=' + document.querySelector('#searchBox').value + '&own=1&stats=1&excludesubtype=boardgameexpansion');
+                                setGameList([]);
+                                recursiveFetchAndWait('https://cryptic-brushlands-34819.herokuapp.com/https://api.geekdo.com/xmlapi2/collection?username=' + document.querySelector('#searchBox').value + '&own=1&stats=1&excludesubtype=boardgameexpansion');
                             } }>
             Submit</button>
         </div>
