@@ -27,6 +27,32 @@ const App = () => {
 	const [loading, setLoading] = useState(false);
 	const [pageSize, setPageSize] = useState(undefined); // React Table default
 
+	/* Going through the array and changing default values and converting string numbers to actual numbers so that the Table can sort them correctly */
+	const gameDataConversions = (array) => {
+		array.forEach(game => {
+			if (game.statistics[0].ratings[0].ranks[0].rank[0].$.value === 'Not Ranked')
+				game.statistics[0].ratings[0].ranks[0].rank[0].$.value = 'N/A';
+			else {
+				game.statistics[0].ratings[0].ranks[0].rank[0].$.value = Number(game.statistics[0].ratings[0].ranks[0].rank[0].$.value);
+			}
+
+			game.minplayers[0].$.value = Number(game.minplayers[0].$.value);
+			if (isNaN(game.minplayers[0].$.value))
+				game.stats[0].$.minplayers = '--';
+
+			game.maxplayers[0].$.value = Number(game.maxplayers[0].$.value);
+			if (isNaN(game.maxplayers[0].$.value))
+				game.maxplayers[0].$.value = '--';
+
+			game.maxplaytime[0].$.value = Number(game.maxplaytime[0].$.value);
+			if (isNaN(game.maxplaytime[0].$.value))
+				game.maxplaytime[0].$.value = '--';
+
+			if (game.yearpublished[0].$.value === undefined)
+				game.yearpublished[0].$.value = ['--'];
+		})
+	}
+
 	/*******************************
 	New function to call setTimeout otherwise recursiveFetchAndWait() would be run again 
 	when you pass it to the default JS setTimeout function because it has a parameter.
@@ -58,52 +84,58 @@ const App = () => {
 			})
 
 			.then(data => {
+				let numGames;
 				let gameIds = [];
+				let arrayOfArrays = [];
 
 				XML2JS.parseString(data, (err, result) => { // xml2js: converts XML to JSON
-					if (result.items.$.totalitems !== '0') { // Only processing further if there are returned results
+					if (result.items) { // Only processing further if there are returned results
+						numGames = Number(result.items.$.totalitems);
 						result.items.item.forEach(game => {
 							gameIds.push(game.$.objectid);
 						});
 					}
-				})
 
-				return fetch('https://cryptic-brushlands-34819.herokuapp.com/https://boardgamegeek.com/xmlapi2/thing?stats=1&id=' + gameIds.join());
-			})
-
-			.then(response => {
-				return response.text();
-			})
-
-			.then(xml => {
-				return XML2JS.parseString(xml, (err, result) => {
-					/* Going through the array and changing default values and converting string numbers to actual numbers */
-					result.items.item.forEach(game => {
-						if (game.statistics[0].ratings[0].ranks[0].rank[0].$.value === 'Not Ranked')
-							game.statistics[0].ratings[0].ranks[0].rank[0].$.value = 'N/A';
-						else {
-							game.statistics[0].ratings[0].ranks[0].rank[0].$.value = Number(game.statistics[0].ratings[0].ranks[0].rank[0].$.value);
+					if (numGames > 1200) {
+						while (gameIds.length) {
+							arrayOfArrays.push(gameIds.splice(0,1200)); // Splitting gameIds into arrays of max length 1200
 						}
-
-						game.minplayers[0].$.value = Number(game.minplayers[0].$.value);
-						if (isNaN(game.minplayers[0].$.value))
-							game.stats[0].$.minplayers = '--';
-
-						game.maxplayers[0].$.value = Number(game.maxplayers[0].$.value);
-						if (isNaN(game.maxplayers[0].$.value))
-							game.maxplayers[0].$.value = '--';
-
-						game.maxplaytime[0].$.value = Number(game.maxplaytime[0].$.value);
-						if (isNaN(game.maxplaytime[0].$.value))
-							game.maxplaytime[0].$.value = '--';
-
-						if (game.yearpublished[0].$.value === undefined)
-							game.yearpublished[0].$.value = ['--'];
-					})
-
-					setGameList(gameList => gameList.concat(result.items.item));
-					setLoading(false);
+						console.log(arrayOfArrays);
+					}
 				})
+
+				if (numGames > 0 && numGames <= 1200) {
+					return fetch('https://cryptic-brushlands-34819.herokuapp.com/https://boardgamegeek.com/xmlapi2/thing?stats=1&id=' + gameIds.join())
+
+					.then(response => response.text())
+		
+					.then(xml => {
+						return XML2JS.parseString(xml, (err, result) => {
+							console.log(result.items.item);
+							gameDataConversions(result.items.item);
+		
+							setGameList(gameList => gameList.concat(result.items.item));
+							setLoading(false);
+						})
+					})
+					
+				} else {
+					arrayOfArrays.forEach(array => {
+						fetch('https://cryptic-brushlands-34819.herokuapp.com/https://boardgamegeek.com/xmlapi2/thing?stats=1&id=' + array.join())
+
+						.then(response => response.text())
+		
+						.then(xml => {
+							return XML2JS.parseString(xml, (err, result) => {
+								console.log(result.items.item);
+								gameDataConversions(result.items.item);
+			
+								setGameList(gameList => gameList.concat(result.items.item));
+							})
+						})
+					});
+					setLoading(false);
+				}
 			})
 		},
 		[],
