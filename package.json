@@ -8,7 +8,7 @@
     "react-dom": "^16.8.6",
     "react-ga": "^2.5.7",
     "react-scripts": "3.0.0",
-    "react-table": "^6.10.0",
+    "react-table": "^7.3.3",
     "xml2js": "^0.4.19"
   },
   "scripts": {
