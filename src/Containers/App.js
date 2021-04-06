@@ -1,17 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
+import CssBaseline from '@material-ui/core/CssBaseline'
 import UsernameField from '../Components/UsernameField';
+import Table from '../Components/Table'
 import gameDataConversions from '../utils/gameDataConversions'
 import { THING_ITEMS_ENDPOINT, COLLECTION_ENDPOINT } from '../utils/urlConstants';
 import { addFilterPlaceholder, setTimeoutAsCallback } from '../utils/helperFunctions';
-import columns from '../utils/columns';
 
 /* node-xml2js (https://www.npmjs.com/package/xml2js) */
 import XML2JS from 'xml2js'
-
-/* Import React Table */
-import ReactTable from 'react-table';
-import 'react-table/react-table.css';
 
 /* Import Google Analytics */
 import ReactGA from 'react-ga';
@@ -140,25 +137,10 @@ const App = () => {
 			<p className='description'>Enter your BoardGameGeek username below to pull up your collection!</p>
 			<UsernameField recursiveFetchAndWait = { recursiveFetchAndWait } setGameList = { setGameList }/>
 			<p className='tipText'>Tip: Hold shift when sorting to multi-sort!</p>
-			<ReactTable 
-				data = { gameList }
-				columns = { columns }
-				defaultSorted = { [{ id: "statistics[0].ratings[0].ranks[0].rank[0].$.value", desc: false }] } // Page loads with rank as the default sorted column
-				showPaginationTop = { true }
-				minRows = { 5 }
-				pageSizeOptions = {[5, 10, 20, 25, 50, 100, 300, 500, 1000, 2000, 5000, 10000]}
-				defaultPageSize = { 300 }
-				pageSize = { pageSize }
-				loading = { loading }
-				noDataText = { 'No games found or you haven\'t entered your username yet' }
-				className = '-highlight'
-				defaultFilterMethod = {
-					/* Slightly modifying defaultFilterMethod. Changing startsWith to includes and putting a toLowerCase for both row and filter so case sensitivity doesn't matter when the user searchs */
-					(filter, row) => {
-						const id = filter.pivotId || filter.id;
-						return row[id] !== undefined ? String(row[id]).toLowerCase().includes(filter.value.toLowerCase()) : true
-					}
-				}/>
+			<CssBaseline />
+			<div style={{overflowX: 'auto'}}>
+				<Table data = { gameList } />
+			</div>
 			<div id='footer'>
 				<p>Page created with <span role="img" aria-label="Red Heart">❤️</span></p>
 			</div>

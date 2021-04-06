@@ -4,11 +4,11 @@
 
 .h1Link:hover,
 .h1Link:visited:hover {
-	color: inherit;
+	color: black;
 }
 
 .h1Link:visited {
-	color: inherit;
+	color: black;
 }
 
 .tipText {
