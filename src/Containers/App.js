@@ -24,7 +24,6 @@ const urlParamGA = () => {
         action: 'URL Param entered'
       });
 }
-const urlParamUmami = () => window.umami("URL Param entered");
 
 const App = () => {
 
@@ -129,7 +128,6 @@ const App = () => {
 		/* This call is made for if the website is loaded with params attached already */
 		if (username !== null) {
 			urlParamGA(); // Google Analytics
-			urlParamUmami();
 
 			let xmlUrl = COLLECTION_ENDPOINT + username;
 			recursiveFetchAndWait(xmlUrl);
