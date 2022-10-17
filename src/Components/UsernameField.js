@@ -23,6 +23,7 @@ const UsernameField = ({ recursiveFetchAndWait, setGameList}) => {
     const handleKeyPress = (event) => {
         if (event.key === 'Enter') {
             keypressGA(); // Google Analytics
+            window.umami("Enter key pressed")
             setGameList([]);
             recursiveFetchAndWait(COLLECTION_ENDPOINT + event.target.value); 
         }
@@ -40,6 +41,7 @@ const UsernameField = ({ recursiveFetchAndWait, setGameList}) => {
             <button type="button"
                     onClick={ (event) => {
                                 submitGA(); // Google Analytics
+                                window.umami("Clicked Submit");
                                 setGameList([]);
                                 recursiveFetchAndWait(COLLECTION_ENDPOINT + document.querySelector('#searchBox').value);
                             } }>
