@@ -13,18 +13,6 @@ import XML2JS from 'xml2js'
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 
-/* Import Google Analytics */
-import ReactGA from 'react-ga';
-ReactGA.initialize('UA-139517114-1');
-ReactGA.pageview(window.location.pathname + window.location.search);
-/* Google Analytics Event */
-const urlParamGA = () => {
-    ReactGA.event({
-        category: 'Collection Request',
-        action: 'URL Param entered'
-      });
-}
-
 const App = () => {
 
 	const [gameList, setGameList] = useState([]);
@@ -127,8 +115,6 @@ const App = () => {
 		
 		/* This call is made for if the website is loaded with params attached already */
 		if (username !== null) {
-			urlParamGA(); // Google Analytics
-
 			let xmlUrl = COLLECTION_ENDPOINT + username;
 			recursiveFetchAndWait(xmlUrl);
 		}
