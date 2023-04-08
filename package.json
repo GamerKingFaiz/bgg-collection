@@ -6,7 +6,7 @@
     "gh-pages": "^2.0.1",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
-    "react-scripts": "^4.0.3",
+    "react-scripts": "^5.0.1",
     "react-table": "^6.10.0",
     "xml2js": "^0.4.23"
   },
