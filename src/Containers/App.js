@@ -47,7 +47,7 @@ const App = () => {
 				let arrayOfArrays = [];
 
 				XML2JS.parseString(data, (err, result) => { // xml2js: converts XML to JSON
-					if (result.items.$.totalitems !== '0') { // Only processing further if there are returned results
+					if (result.items && result.items.$.totalitems !== '0') { // Only processing further if there are returned results
 						numGames = Number(result.items.$.totalitems);
 
 						result.items.item.forEach(game => {
@@ -55,15 +55,15 @@ const App = () => {
 						});
 					}
 
-					if (numGames > 1200) {
-						// Thing Items endpoint can't handle more then 1200 requests at once, so need to split it up into multiple arrays
+					if (numGames > 1000) {
+						// Thing Items endpoint can't handle more then 1000 requests at once, so need to split it up into multiple arrays
 						while (gameIds.length) {
-							arrayOfArrays.push(gameIds.splice(0,1200)); // Splitting gameIds into arrays of max length 1200
+							arrayOfArrays.push(gameIds.splice(0,1000)); // Splitting gameIds into arrays of max length 1000
 						}
 					}
 				})
 
-				if (numGames > 0 && numGames <= 1200) {
+				if (numGames > 0 && numGames <= 1000) {
 					return fetch(THING_ITEMS_ENDPOINT + gameIds.join())
 
 					.then(response => response.text())
@@ -78,7 +78,7 @@ const App = () => {
 						})
 					})
 					
-				} else { // For collections >1200 games
+				} else { // For collections >1000 games
 					arrayOfArrays.forEach(array => {
 						fetch(THING_ITEMS_ENDPOINT + array.join())
 
