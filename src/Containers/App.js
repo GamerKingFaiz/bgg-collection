@@ -115,7 +115,7 @@ const App = () => {
 		
 		/* This call is made for if the website is loaded with params attached already */
 		if (username !== null) {
-			let xmlUrl = COLLECTION_ENDPOINT + username;
+			let xmlUrl = COLLECTION_ENDPOINT + username.toLowerCase();
 			recursiveFetchAndWait(xmlUrl);
 		}
 	}, [recursiveFetchAndWait]);
