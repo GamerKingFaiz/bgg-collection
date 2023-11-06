@@ -91,11 +91,10 @@ const App = () => {
 								gameDataConversions(result.items.item, collectionData);
 			
 								setGameList(gameList => gameList.concat(result.items.item));
+								setLoading(false);
 							})
 						})
 					});
-
-					setLoading(false);
 				}
 			})
 		},
