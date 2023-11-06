@@ -44,6 +44,7 @@ const App = () => {
 			.then(data => {
 				let numGames;
 				let gameIds = [];
+				let collectionData = {};
 				let arrayOfArrays = [];
 
 				XML2JS.parseString(data, (err, result) => { // xml2js: converts XML to JSON
@@ -52,6 +53,7 @@ const App = () => {
 
 						result.items.item.forEach(game => {
 							gameIds.push(game.$.objectid);
+							collectionData[game.$.objectid] = game;
 						});
 					}
 
@@ -70,7 +72,7 @@ const App = () => {
 		
 					.then(xml => {
 						return XML2JS.parseString(xml, (err, result) => {
-							gameDataConversions(result.items.item);
+							gameDataConversions(result.items.item, collectionData);
 		
 							setGameList(gameList => gameList.concat(result.items.item));
 
@@ -86,7 +88,7 @@ const App = () => {
 		
 						.then(xml => {
 							return XML2JS.parseString(xml, (err, result) => {
-								gameDataConversions(result.items.item);
+								gameDataConversions(result.items.item, collectionData);
 			
 								setGameList(gameList => gameList.concat(result.items.item));
 							})

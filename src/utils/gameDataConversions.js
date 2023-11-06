@@ -1,6 +1,10 @@
 /* Going through the array and changing default values and converting string numbers to actual numbers so that the Table can sort them correctly */
-const gameDataConversions = (array) => {
+const gameDataConversions = (array, collectionData) => {
 	array.forEach(game => {
+		game.name[0].$.value = collectionData[game.$.id].name[0]._;
+		if (collectionData[game.$.id].thumbnail)
+			game.thumbnail[0] = collectionData[game.$.id].thumbnail[0];
+
 		if (game.statistics[0].ratings[0].ranks[0].rank[0].$.value === 'Not Ranked')
 			game.statistics[0].ratings[0].ranks[0].rank[0].$.value = 'N/A';
 		else {
@@ -19,8 +23,10 @@ const gameDataConversions = (array) => {
 		if (isNaN(game.maxplaytime[0].$.value))
 			game.maxplaytime[0].$.value = '--';
 
-		if (game.yearpublished[0].$.value === undefined)
-			game.yearpublished[0].$.value = ['--'];
+		if (collectionData[game.$.id].yearpublished)
+			game.yearpublished[0].$.value = collectionData[game.$.id].yearpublished[0];
+		if (game.yearpublished[0].$.value === undefined || game.yearpublished[0].$.value === 0)
+			game.yearpublished[0].$.value = '--';
 	})
 }
 
