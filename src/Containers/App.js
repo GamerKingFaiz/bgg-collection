@@ -41,7 +41,7 @@ const App = () => {
 					console.log('error: ', response.status);
 			})
 
-			.then(data => {
+			.then(async data => {
 				let numGames;
 				let gameIds = [];
 				let collectionData = {};
@@ -81,20 +81,15 @@ const App = () => {
 					})
 					
 				} else { // For collections >20 games
-					arrayOfArrays.forEach(array => {
-						fetch(THING_ITEMS_ENDPOINT + array.join())
-
-						.then(response => response.text())
-		
-						.then(xml => {
-							return XML2JS.parseString(xml, (err, result) => {
-								gameDataConversions(result.items.item, collectionData);
-			
-								setGameList(gameList => gameList.concat(result.items.item));
-								setLoading(false);
-							})
-						})
-					});
+					const requests = arrayOfArrays.map((array) => fetch(THING_ITEMS_ENDPOINT + array.join()));
+					const responses = await Promise.all(requests);
+					const promises = responses.map((response) => response.text());
+					const xmlArray = await Promise.all(promises);
+					return xmlArray.map((xml) => XML2JS.parseString(xml, (err, result) => {
+						gameDataConversions(result.items.item, collectionData);
+						setGameList(gameList => gameList.concat(result.items.item));
+						setLoading(false);
+					}))
 				}
 			})
 		},
