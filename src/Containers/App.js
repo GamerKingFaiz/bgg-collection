@@ -57,15 +57,15 @@ const App = () => {
 						});
 					}
 
-					if (numGames > 1000) {
-						// Thing Items endpoint can't handle more then 1000 requests at once, so need to split it up into multiple arrays
+					if (numGames > 20) {
+						// Thing Items endpoint can't handle more then 20 requests at once, so need to split it up into multiple arrays
 						while (gameIds.length) {
-							arrayOfArrays.push(gameIds.splice(0,1000)); // Splitting gameIds into arrays of max length 1000
+							arrayOfArrays.push(gameIds.splice(0,20)); // Splitting gameIds into arrays of max length 20
 						}
 					}
 				})
 
-				if (numGames > 0 && numGames <= 1000) {
+				if (numGames > 0 && numGames <= 20) {
 					return fetch(THING_ITEMS_ENDPOINT + gameIds.join())
 
 					.then(response => response.text())
@@ -80,7 +80,7 @@ const App = () => {
 						})
 					})
 					
-				} else { // For collections >1000 games
+				} else { // For collections >20 games
 					arrayOfArrays.forEach(array => {
 						fetch(THING_ITEMS_ENDPOINT + array.join())
 
