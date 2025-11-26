@@ -4,6 +4,7 @@ import UsernameField from '../Components/UsernameField';
 import gameDataConversions from '../utils/gameDataConversions'
 import { THING_ITEMS_ENDPOINT, COLLECTION_ENDPOINT } from '../utils/urlConstants';
 import { addFilterPlaceholder, setTimeoutAsCallback } from '../utils/helperFunctions';
+import { ReactComponent as BGGLogo } from '../assets/powered-by-bgg-rgb.svg';
 import columns from '../utils/columns';
 
 /* node-xml2js (https://www.npmjs.com/package/xml2js) */
@@ -143,6 +144,14 @@ const App = () => {
 				}/>
 			<div id='footer'>
 				<p>Page created with <span role="img" aria-label="Red Heart">❤️</span></p>
+				<a
+					href="https://boardgamegeek.com/wiki/page/BGG_XML_API2"
+					target="_blank"
+					rel="noreferrer"
+					onClick={() => window.umami.track("BGG Logo Clicked")}
+				>
+					<BGGLogo title="Powered by BGG" id="bgg-logo" />
+				</a>
 			</div>
 		</div>
 	)

@@ -81,11 +81,10 @@ a:visited {
 }
 
 #footer {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	height: 100px;
-	margin: 0 auto;
-	max-width: 998px;
+	margin-top: 40px;
+}
+
+#bgg-logo {
+	width: 150px;
+	height: auto;
 }
