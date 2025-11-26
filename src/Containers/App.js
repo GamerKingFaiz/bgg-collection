@@ -86,11 +86,28 @@ const App = () => {
 					const responses = await Promise.all(requests);
 					const promises = responses.map((response) => response.text());
 					const xmlArray = await Promise.all(promises);
-					return xmlArray.map((xml) => XML2JS.parseString(xml, (err, result) => {
-						gameDataConversions(result.items.item, collectionData);
-						setGameList(gameList => gameList.concat(result.items.item));
-						setLoading(false);
-					}))
+
+					// Promisify xml2js.parseString so we can await parsing
+					const parseXml = (xml) => new Promise((resolve, reject) => {
+						XML2JS.parseString(xml, (err, result) => {
+							if (err) return reject(err);
+							resolve(result);
+						});
+					});
+
+					const parsedResults = await Promise.all(xmlArray.map(parseXml));
+					let combinedItems = [];
+
+					parsedResults.forEach(result => {
+						if (result && result.items && result.items.item) {
+							gameDataConversions(result.items.item, collectionData);
+							combinedItems = combinedItems.concat(result.items.item);
+						}
+					});
+
+					setGameList(gameList => gameList.concat(combinedItems));
+					setLoading(false);
+					return;
 				}
 			})
 		},
