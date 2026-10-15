@@ -4,7 +4,7 @@ import UsernameField from '../Components/UsernameField';
 import gameDataConversions from '../utils/gameDataConversions'
 import { THING_ITEMS_ENDPOINT, COLLECTION_ENDPOINT } from '../utils/urlConstants';
 import { addFilterPlaceholder, setTimeoutAsCallback } from '../utils/helperFunctions';
-import { ReactComponent as BGGLogo } from '../assets/powered-by-bgg-rgb.svg';
+import bggLogoUrl from '../assets/powered-by-bgg-rgb.svg';
 import columns from '../utils/columns';
 
 /* node-xml2js (https://www.npmjs.com/package/xml2js) */
@@ -167,7 +167,7 @@ const App = () => {
 					rel="noreferrer"
 					onClick={() => window.umami.track("BGG Logo Clicked")}
 				>
-					<BGGLogo title="Powered by BGG" id="bgg-logo" />
+					<img src={bggLogoUrl} alt="Powered by BGG" id="bgg-logo" />
 				</a>
 			</div>
 		</div>

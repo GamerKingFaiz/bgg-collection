@@ -19,7 +19,7 @@ const UsernameField = ({ recursiveFetchAndWait, setGameList}) => {
                 placeholder="Enter BGG Username"
                 name="username"
                 id="searchBox"
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyPress}
             />
             <button type="button"
                     onClick={ (event) => {
