@@ -65,6 +65,20 @@ const App = () => {
 		if (username !== null) {
 			fetchCollection(username);
 		}
+
+		/* Re-fetch (or clear) the collection when the user navigates
+		back/forward between username entries via the browser history. */
+		const onPopState = () => {
+			const username = new URLSearchParams(window.location.search).get("username");
+			if (username) {
+				fetchCollection(username);
+			} else {
+				setGameList([]);
+				setCount(null);
+			}
+		};
+		window.addEventListener("popstate", onPopState);
+		return () => window.removeEventListener("popstate", onPopState);
 	}, [fetchCollection]);
 
 	return (

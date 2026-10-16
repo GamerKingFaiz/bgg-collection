@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './UsernameField.css'
 
 const UsernameField = ({ fetchCollection, setGameList }) => {
@@ -14,14 +14,27 @@ const UsernameField = ({ fetchCollection, setGameList }) => {
         const current = new URLSearchParams(window.location.search).get('username');
         if (current === value) return;
 
-        /* Reflect the username in the URL's query param without a reload */
+        /* Reflect the username in the URL's query param without a reload.
+        Use pushState so a new history entry is created and the browser's
+        back/forward buttons can move between usernames. */
         const url = new URL(window.location);
         url.searchParams.set('username', value);
-        window.history.replaceState({}, '', url);
+        window.history.pushState({}, '', url);
 
         setGameList([]);
         fetchCollection(value);
     }
+
+    /* Keep the input in sync when the user navigates back/forward */
+    useEffect(() => {
+        const onPopState = () => {
+            const username = new URLSearchParams(window.location.search).get('username');
+            const input = document.querySelector('#searchBox');
+            if (input) input.value = username ?? '';
+        };
+        window.addEventListener('popstate', onPopState);
+        return () => window.removeEventListener('popstate', onPopState);
+    }, []);
 
     const handleKeyPress = (event) => {
         if (event.key === 'Enter') {
