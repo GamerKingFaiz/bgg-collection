@@ -13,6 +13,7 @@ import 'react-table/react-table.css';
 const App = () => {
 
 	const [gameList, setGameList] = useState([]);
+	const [count, setCount] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
 	const [pageSize, setPageSize] = useState(undefined); // React Table default
@@ -38,6 +39,7 @@ const App = () => {
 			}
 			const data = await response.json();
 			setGameList(data.games ?? []);
+			setCount(data.games?.length ?? 0);
 		} catch (err) {
 			console.error('fetchCollection error:', err);
 			setError(err.message ?? 'Failed to load collection');
@@ -68,7 +70,7 @@ const App = () => {
 	return (
 		<div className='container'>
 			<h1><a className="h1Link" href='.'>Better BGG Collection</a></h1>
-			<p className='description'>Enter your BoardGameGeek username below to pull up your collection!</p>
+			<p className='description'>{count !== null ? `Collection size: ${count} games` : 'Enter your BoardGameGeek username below to pull up your collection!'}</p>
 			<UsernameField fetchCollection = { fetchCollection } setGameList = { setGameList }/>
 			{error && <p className='errorText' role="alert">{error}</p>}
 			<p className='tipText'>Tip: Hold shift when sorting to multi-sort!</p>
