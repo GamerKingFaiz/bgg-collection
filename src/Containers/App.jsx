@@ -77,7 +77,7 @@ const App = () => {
 			<ReactTable 
 				data = { gameList }
 				columns = { columns }
-				defaultSorted = { [{ id: "statistics[0].ratings[0].ranks[0].rank[0].$.value", desc: false }] } // Page loads with rank as the default sorted column
+				defaultSorted = { [{ id: "rank", desc: false }] } // Page loads with rank as the default sorted column
 				showPaginationTop = { true }
 				minRows = { 5 }
 				pageSizeOptions = {[5, 10, 20, 25, 50, 100, 300, 500, 1000, 2000, 5000, 10000]}

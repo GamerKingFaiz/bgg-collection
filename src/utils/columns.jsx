@@ -1,146 +1,109 @@
 import React from 'react';
 
+/* Shared sort helpers: force null / undefined / 'N/A' / '--' to the bottom.
+   `topSort` is the descending variant used for "higher = better" columns. */
+const bottomSort = (a, b) => {
+    a = a === null || a === undefined || a === 'N/A' || a === '--' ? Infinity : a;
+    b = b === null || b === undefined || b === 'N/A' || b === '--' ? Infinity : b;
+    if (a > b) return 1;
+    if (a < b) return -1;
+    return 0;
+};
+const topSort = (a, b) => {
+    a = a === null || a === undefined || a === 'N/A' || a === '--' ? -Infinity : a;
+    b = b === null || b === undefined || b === 'N/A' || b === '--' ? -Infinity : b;
+    if (a > b) return 1;
+    if (a < b) return -1;
+    return 0;
+};
+
+/* Each game row is the flat object the backend returns:
+   { id, name, year, rank, thumbnail, average, minPlayers, maxPlayers, playTime, weight } */
 const columns = [
     {
         Header: 'Rank',
-        accessor: 'statistics[0].ratings[0].ranks[0].rank[0].$.value',
+        accessor: 'rank',
         maxWidth: 75,
-        sortMethod: (a,b) => {
-            // force null, undefined, and N/A to the bottom
-            a = a === null || a === undefined || a === 'N/A' ? Infinity : a
-            b = b === null || b === undefined || b === 'N/A' ? Infinity : b
-            // Return either 1 or -1 to indicate a sort priority
-            if (a > b) {
-                return 1
-            }
-            if (a < b) {
-                return -1
-            }
-            // returning 0, undefined or any falsey value will use subsequent sorts or
-            // the index as a tiebreaker
-            return 0
-        }
+        sortMethod: bottomSort,
     },
     {
         Header: '',
-        accessor: 'thumbnail[0]',
+        accessor: 'thumbnail',
         maxWidth: 75,
         sortable: false,
-        Cell: props => <img src={ props.value } width="64" alt="thumbnail" className='thumbnail' />
+        Cell: props => props.value ? <img src={props.value} width="64" alt="thumbnail" className='thumbnail' /> : null,
     },
     {
         Header: 'Title',
-        accessor: 'name[0].$.value',
+        accessor: 'name',
         minWidth: 150,
         maxWidth: 450,
         filterable: true,
-        style: { 'whiteSpace': 'unset'}, // Allows word wrap
+        style: { 'whiteSpace': 'unset' }, // Allows word wrap
         Cell: props => <div className='title'>
-                        <a href={ 'https://boardgamegeek.com/boardgame/' + props.original.$.id } target="_blank" rel="noopener noreferrer">
-                            { props.value}
-                        </a> <span className='yearPublished'>({ props.original.yearpublished[0].$.value })</span>
-                        </div>
+            <a href={'https://boardgamegeek.com/boardgame/' + props.original.id} target="_blank" rel="noopener noreferrer">
+                {props.value}
+            </a> <span className='yearPublished'>({props.original.year ?? '--'})</span>
+        </div>,
     },
     {
         Header: 'Avg Rating',
-        accessor: 'statistics[0].ratings[0].average[0].$.value',
+        accessor: 'average',
         defaultSortDesc: true,
         maxWidth: 100,
-        Cell: props => 	<div className='ratingContainer'>
-                            <div className='averageRating'
-                                /* Setting background colors for the different ranges */
-                                    style={{backgroundColor:
-                                    Math.round(10 * props.value)/10 >= 9 ? '#249563' // Rounding to the tenths place
-                                    : Math.round(10 * props.value)/10 >= 8 ?  '#2fc482'
-                                    : Math.round(10 * props.value)/10 >= 7 ?  '#1d8acd'
-                                    : Math.round(10 * props.value)/10 >= 5 ?  '#5369a2'
-                                    : Math.round(10 * props.value)/10 >= 3 ?  '#df4751'
-                                    : '#db303b'
-                            }}>
-                                { /* The average rating number to be displayd */ }
-                                { Math.round(10 * props.value)/10 }
-                                
-                            </div>
-                        </div>
+        Cell: props => {
+            const value = props.value;
+            const rounded = value == null ? 0 : Math.round(10 * value) / 10; // Rounding to the tenths place
+            return <div className='ratingContainer'>
+                <div className='averageRating'
+                    /* Setting background colors for the different ranges */
+                    style={{ backgroundColor:
+                        rounded >= 9 ? '#249563'
+                            : rounded >= 8 ? '#2fc482'
+                                : rounded >= 7 ? '#1d8acd'
+                                    : rounded >= 5 ? '#5369a2'
+                                        : rounded >= 3 ? '#df4751'
+                                            : '#db303b' }}>
+                    {value == null ? '--' : rounded}
+                </div>
+            </div>;
+        },
     },
     {
         Header: 'Min Players',
-        accessor: 'minplayers[0].$.value',
+        accessor: 'minPlayers',
         maxWidth: 100,
-        sortMethod: (a,b) => {
-            // force null, undefined, and N/A to the bottom
-            a = a === null || a === undefined || a === '--' ? Infinity : a
-            b = b === null || b === undefined || b === '--' ? Infinity : b
-            // Return either 1 or -1 to indicate a sort priority
-            if (a > b) {
-                return 1
-            }
-            if (a < b) {
-                return -1
-            }
-            // returning 0, undefined or any falsey value will use subsequent sorts or
-            // the index as a tiebreaker
-            return 0
-        }
+        sortMethod: bottomSort,
     },
     {
         Header: 'Max Players',
-        accessor: 'maxplayers[0].$.value',
+        accessor: 'maxPlayers',
         defaultSortDesc: true,
         maxWidth: 100,
-        sortMethod: (a,b) => {
-            // force null, undefined, and N/A to the bottom
-            a = a === null || a === undefined || a === '--' ? -Infinity : a
-            b = b === null || b === undefined || b === '--' ? -Infinity : b
-            // Return either 1 or -1 to indicate a sort priority
-            if (a > b) {
-                return 1
-            }
-            if (a < b) {
-                return -1
-            }
-            // returning 0, undefined or any falsey value will use subsequent sorts or
-            // the index as a tiebreaker
-            return 0
-        }
+        sortMethod: topSort,
     },
     {
         Header: 'Play Time',
-        accessor: 'maxplaytime[0].$.value',
+        accessor: 'playTime',
         defaultSortDesc: true,
         maxWidth: 100,
-        sortMethod: (a,b) => {
-            // force null, undefined, and N/A to the bottom
-            a = a === null || a === undefined || a === '--' ? -Infinity : a
-            b = b === null || b === undefined || b === '--' ? -Infinity : b
-            // Return either 1 or -1 to indicate a sort priority
-            if (a > b) {
-                return 1
-            }
-            if (a < b) {
-                return -1
-            }
-            // returning 0, undefined or any falsey value will use subsequent sorts or
-            // the index as a tiebreaker
-            return 0
-        },
-        Cell: props => <span>{props.value} Min</span>
+        sortMethod: topSort,
+        Cell: props => <span>{props.value} Min</span>,
     },
     {
         Header: 'Weight',
-        accessor: 'statistics[0].ratings[0].averageweight[0].$.value',
+        accessor: 'weight',
         maxWidth: 100,
-        Cell: props => 	<strong><span
-                            style={{color:
-                                Math.round(100 * props.value)/100 >=5 ? '#ff6b26' // Rounding to the hundreths place
-                                : Math.round(100 * props.value)/100 >=4 ? '#ff6b26'
-                                : Math.round(100 * props.value)/100 >=3 ? '#ff6b26'
-                                : Math.round(100 * props.value)/100 >=2 ? '#5bda98'
-                                : '#5bda98'
-                        }}>
-                            { Math.round(100 * props.value)/100 }</span> / 5</strong>
-                        
-    }
-]
+        Cell: props => {
+            const value = props.value;
+            const rounded = value == null ? 0 : Math.round(100 * value) / 100; // Rounding to the hundreths place
+            return <strong><span
+                style={{ color:
+                    rounded >= 3 ? '#ff6b26'
+                    : '#5bda98' }}>
+                {value == null ? '--' : rounded}</span> / 5</strong>;
+        },
+    },
+];
 
 export default columns;
