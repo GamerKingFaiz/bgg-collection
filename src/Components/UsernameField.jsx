@@ -1,14 +1,19 @@
 import React from 'react';
-import { COLLECTION_ENDPOINT } from '../utils/urlConstants';
 import './UsernameField.css'
 
-const UsernameField = ({ recursiveFetchAndWait, setGameList}) => {
+const UsernameField = ({ fetchCollection, setGameList }) => {
+
+    const submit = (username) => {
+        const value = username.trim().toLowerCase();
+        if (!value) return;
+        setGameList([]);
+        fetchCollection(value);
+    }
 
     const handleKeyPress = (event) => {
         if (event.key === 'Enter') {
-            window.umami.track("Enter key pressed")
-            setGameList([]);
-            recursiveFetchAndWait(COLLECTION_ENDPOINT + event.target.value.toLowerCase()); 
+            window.umami.track("Enter key pressed");
+            submit(event.target.value);
         }
     }
 
@@ -22,10 +27,9 @@ const UsernameField = ({ recursiveFetchAndWait, setGameList}) => {
                 onKeyDown={handleKeyPress}
             />
             <button type="button"
-                    onClick={ (event) => {
+                    onClick={(event) => {
                                 window.umami.track("Clicked Submit");
-                                setGameList([]);
-                                recursiveFetchAndWait(COLLECTION_ENDPOINT + document.querySelector('#searchBox').value.toLowerCase());
+                                submit(document.querySelector('#searchBox').value);
                             } }>
             Submit</button>
         </div>

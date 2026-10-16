@@ -1,3 +1,4 @@
 const API_BASE_URL = 'https://api.betterbggcollection.com/';
-export const THING_ITEMS_ENDPOINT = `${API_BASE_URL}xmlapi2/thing?stats=1&id=`;
-export const COLLECTION_ENDPOINT = `${API_BASE_URL}xmlapi2/collection?own=1&stats=1&excludesubtype=boardgameexpansion&username=`;
+// The backend orchestrates collection + thing stats and returns a single
+// JSON document with the xml2js-shaped `games` array the table expects.
+export const COLLECTION_ENDPOINT = `${API_BASE_URL}collection?username=`;

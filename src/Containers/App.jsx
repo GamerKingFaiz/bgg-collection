@@ -1,14 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import UsernameField from '../Components/UsernameField';
-import gameDataConversions from '../utils/gameDataConversions'
-import { THING_ITEMS_ENDPOINT, COLLECTION_ENDPOINT } from '../utils/urlConstants';
-import { addFilterPlaceholder, setTimeoutAsCallback } from '../utils/helperFunctions';
+import { COLLECTION_ENDPOINT } from '../utils/urlConstants';
+import { addFilterPlaceholder } from '../utils/helperFunctions';
 import bggLogoUrl from '../assets/powered-by-bgg-rgb.svg';
 import columns from '../utils/columns';
-
-/* node-xml2js (https://www.npmjs.com/package/xml2js) */
-import XML2JS from 'xml2js'
 
 /* Import React Table */
 import ReactTable from 'react-table';
@@ -18,103 +14,39 @@ const App = () => {
 
 	const [gameList, setGameList] = useState([]);
 	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState(null);
 	const [pageSize, setPageSize] = useState(undefined); // React Table default
 
 	/*******************************
-	Function that fetches the data. The Collection endpoint returns response code 202 until all the data
-	has been retrieved. This function will wait an allotted amount of time and then retry until it
-	retrieves a 200 response. Then the Thing Items endpoint is called to gather additional statistics.
-	Finally the received array is added to the state array gameList.
+	Asks the backend to fetch + merge the collection and thing stats in a single
+	request. The backend handles the 202 retry (exponential backoff) and returns
+	a JSON document: { username, count, games } where `games` is the array of
+	xml2js-shaped items the table expects.
 	********************************/
-	const recursiveFetchAndWait = useCallback(
-		(url) => {
-			setLoading(true);
-	
-			fetch(url)
-			.then(response => {
-				if (response.status === 200) { // Checking for response code 200
-					return response.text();
+	const fetchCollection = useCallback(async (username) => {
+		setLoading(true);
+		setError(null);
+		try {
+			const response = await fetch(COLLECTION_ENDPOINT + encodeURIComponent(username));
+			if (!response.ok) {
+				let msg = `Request failed (${response.status})`;
+				try {
+					const body = await response.json();
+					if (body?.error) msg = body.error;
+				} catch { /* non-JSON body */ }
+				throw new Error(msg);
+			}
+			const data = await response.json();
+			setGameList(data.games ?? []);
+		} catch (err) {
+			console.error('fetchCollection error:', err);
+			setError(err.message ?? 'Failed to load collection');
+		} finally {
+			setLoading(false);
+		}
+	}, []);
 
-				} else if (response.status === 202) { // If the status response was 202 (API still retrieving data), call the fetch again after a set timeout
-					setTimeoutAsCallback(() => recursiveFetchAndWait(url));
-
-				} else
-					console.log('error: ', response.status);
-			})
-
-			.then(async data => {
-				let numGames;
-				let gameIds = [];
-				let collectionData = {};
-				let arrayOfArrays = [];
-
-				XML2JS.parseString(data, (err, result) => { // xml2js: converts XML to JSON
-					if (result.items && result.items.$.totalitems !== '0') { // Only processing further if there are returned results
-						numGames = Number(result.items.$.totalitems);
-
-						result.items.item.forEach(game => {
-							gameIds.push(game.$.objectid);
-							collectionData[game.$.objectid] = game;
-						});
-					}
-
-					if (numGames > 20) {
-						// Thing Items endpoint can't handle more then 20 requests at once, so need to split it up into multiple arrays
-						while (gameIds.length) {
-							arrayOfArrays.push(gameIds.splice(0,20)); // Splitting gameIds into arrays of max length 20
-						}
-					}
-				})
-
-				if (numGames > 0 && numGames <= 20) {
-					return fetch(THING_ITEMS_ENDPOINT + gameIds.join())
-
-					.then(response => response.text())
-		
-					.then(xml => {
-						return XML2JS.parseString(xml, (err, result) => {
-							gameDataConversions(result.items.item, collectionData);
-		
-							setGameList(gameList => gameList.concat(result.items.item));
-
-							setLoading(false);
-						})
-					})
-					
-				} else { // For collections >20 games
-					const requests = arrayOfArrays.map((array) => fetch(THING_ITEMS_ENDPOINT + array.join()));
-					const responses = await Promise.all(requests);
-					const promises = responses.map((response) => response.text());
-					const xmlArray = await Promise.all(promises);
-
-					// Promisify xml2js.parseString so we can await parsing
-					const parseXml = (xml) => new Promise((resolve, reject) => {
-						XML2JS.parseString(xml, (err, result) => {
-							if (err) return reject(err);
-							resolve(result);
-						});
-					});
-
-					const parsedResults = await Promise.all(xmlArray.map(parseXml));
-					let combinedItems = [];
-
-					parsedResults.forEach(result => {
-						if (result && result.items && result.items.item) {
-							gameDataConversions(result.items.item, collectionData);
-							combinedItems = combinedItems.concat(result.items.item);
-						}
-					});
-
-					setGameList(gameList => gameList.concat(combinedItems));
-					setLoading(false);
-					return;
-				}
-			})
-		},
-		[],
-	);
-
-	useEffect(() => { // React hook that replaced ComponentDidMount
+	useEffect(() => {
 		addFilterPlaceholder();
 
 		/* Grabbing the URL params */
@@ -129,16 +61,16 @@ const App = () => {
 		
 		/* This call is made for if the website is loaded with params attached already */
 		if (username !== null) {
-			let xmlUrl = COLLECTION_ENDPOINT + username.toLowerCase();
-			recursiveFetchAndWait(xmlUrl);
+			fetchCollection(username);
 		}
-	}, [recursiveFetchAndWait]);
+	}, [fetchCollection]);
 
 	return (
 		<div className='container'>
 			<h1><a className="h1Link" href='.'>Better BGG Collection</a></h1>
 			<p className='description'>Enter your BoardGameGeek username below to pull up your collection!</p>
-			<UsernameField recursiveFetchAndWait = { recursiveFetchAndWait } setGameList = { setGameList }/>
+			<UsernameField fetchCollection = { fetchCollection } setGameList = { setGameList }/>
+			{error && <p className='errorText' role="alert">{error}</p>}
 			<p className='tipText'>Tip: Hold shift when sorting to multi-sort!</p>
 			<ReactTable 
 				data = { gameList }

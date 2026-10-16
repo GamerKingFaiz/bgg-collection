@@ -17,6 +17,17 @@
 	font-size: 13px;
 }
 
+.errorText {
+	color: #c0392b;
+	background-color: #fdecea;
+	border: 1px solid #f5c6cb;
+	border-radius: 4px;
+	padding: 8px 12px;
+	margin: 8px auto;
+	max-width: 600px;
+	font-size: 14px;
+}
+
 @media only screen and (max-width: 768px) {
 	.tipText {
 	  display: none;
