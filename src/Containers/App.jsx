@@ -115,7 +115,7 @@ const App = () => {
 					rel="noreferrer"
 					onClick={() => window.umami.track("BGG Logo Clicked")}
 				>
-					<img src={bggLogoUrl} alt="Powered by BGG" id="bgg-logo" />
+					<img loading="lazy" src={bggLogoUrl} alt="Powered by BGG" id="bgg-logo" />
 				</a>
 			</div>
 		</div>

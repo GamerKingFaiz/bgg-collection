@@ -31,7 +31,7 @@ const columns = [
         accessor: 'thumbnail',
         maxWidth: 75,
         sortable: false,
-        Cell: props => props.value ? <img src={props.value} width="64" alt="thumbnail" className='thumbnail' /> : null,
+        Cell: props => props.value ? <img loading="lazy" src={props.value} width="64" alt="thumbnail" className='thumbnail' /> : null,
     },
     {
         Header: 'Title',
