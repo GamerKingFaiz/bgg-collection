@@ -2,14 +2,18 @@ import React from 'react';
 
 /* Shared sort helpers: force null / undefined / 'N/A' / '--' to the bottom.
    `topSort` is the descending variant used for "higher = better" columns. */
-const bottomSort = (a, b) => {
+const bottomSort = (rowA, rowB, columnId) => {
+    let a = rowA.getValue(columnId);
+    let b = rowB.getValue(columnId);
     a = a === null || a === undefined || a === 'N/A' || a === '--' ? Infinity : a;
     b = b === null || b === undefined || b === 'N/A' || b === '--' ? Infinity : b;
     if (a > b) return 1;
     if (a < b) return -1;
     return 0;
 };
-const topSort = (a, b) => {
+const topSort = (rowA, rowB, columnId) => {
+    let a = rowA.getValue(columnId);
+    let b = rowB.getValue(columnId);
     a = a === null || a === undefined || a === 'N/A' || a === '--' ? -Infinity : a;
     b = b === null || b === undefined || b === 'N/A' || b === '--' ? -Infinity : b;
     if (a > b) return 1;
@@ -17,42 +21,87 @@ const topSort = (a, b) => {
     return 0;
 };
 
+/* Case-insensitive "includes" filter, replacing react-table's defaultFilterMethod. */
+const includesFilter = (row, columnId, filterValue) => {
+    const value = row.getValue(columnId);
+    return value != null ? String(value).toLowerCase().includes(String(filterValue).toLowerCase()) : true;
+};
+
+/* Shared header renderer: sort toggle + filter input. The first-click sort
+   direction is declared per-column via the `sortDescFirst` option, so this
+   handler just toggles and lets the table pick the direction. */
+const makeHeader = (label) => ({ column }) => {
+    const canSort = column.getCanSort();
+    return (
+        <div className='headerCell'>
+            <span
+                className='headerLabel'
+                style={{ cursor: canSort ? 'pointer' : 'default' }}
+                onClick={(event) => {
+                    if (!canSort) return;
+                    /* Hold shift to multi-sort (add this column to the existing
+                       sort order) instead of replacing it. */
+                    column.toggleSorting(undefined, event.shiftKey);
+                }}
+            >
+                {label}
+                {column.getIsSorted() === 'asc' && ' ▲'}
+                {column.getIsSorted() === 'desc' && ' ▼'}
+            </span>
+            {column.getCanFilter() && (
+                <input
+                    placeholder="Search..."
+                    value={column.getFilterValue() ?? ''}
+                    onChange={e => column.setFilterValue(e.target.value)}
+                />
+            )}
+        </div>
+    );
+};
+
 /* Each game row is the flat object the backend returns:
    { id, name, year, rank, thumbnail, average, minPlayers, maxPlayers, playTime, weight } */
 const columns = [
     {
-        Header: 'Rank',
-        accessor: 'rank',
-        maxWidth: 75,
-        sortMethod: bottomSort,
+        accessorKey: 'rank',
+        size: 75,
+        sortingFn: bottomSort,
+        sortDescFirst: false, // Low number (best) first
+        enableColumnFilter: false,
+        header: makeHeader('Rank'),
     },
     {
-        Header: '',
-        accessor: 'thumbnail',
-        maxWidth: 75,
-        sortable: false,
-        Cell: props => props.value ? <img loading="lazy" src={props.value} width="64" alt="thumbnail" className='thumbnail' /> : null,
+        header: '',
+        accessorKey: 'thumbnail',
+        size: 75,
+        enableSorting: false,
+        enableColumnFilter: false,
+        cell: ({ getValue }) => getValue()
+            ? <img loading="lazy" src={getValue()} width="64" alt="thumbnail" className='thumbnail' />
+            : null,
     },
     {
-        Header: 'Title',
-        accessor: 'name',
-        minWidth: 150,
-        maxWidth: 450,
-        filterable: true,
+        accessorKey: 'name',
+        size: 450,
+        minSize: 150,
+        sortDescFirst: false, // A–Z first
+        enableColumnFilter: true,
+        filterFn: includesFilter,
         style: { 'whiteSpace': 'unset' }, // Allows word wrap
-        Cell: props => <div className='title'>
-            <a href={'https://boardgamegeek.com/boardgame/' + props.original.id} target="_blank" rel="noopener noreferrer">
-                {props.value}
-            </a> <span className='yearPublished'>({props.original.year ?? '--'})</span>
+        header: makeHeader('Title'),
+        cell: ({ getValue, row }) => <div className='title'>
+            <a href={'https://boardgamegeek.com/boardgame/' + row.original.id} target="_blank" rel="noopener noreferrer">
+                {getValue()}
+            </a> <span className='yearPublished'>({row.original.year ?? '--'})</span>
         </div>,
     },
     {
-        Header: 'Avg Rating',
-        accessor: 'average',
-        defaultSortDesc: true,
-        maxWidth: 100,
-        Cell: props => {
-            const value = props.value;
+        accessorKey: 'average',
+        size: 100,
+        sortDescFirst: true, // Highest rating first
+        enableColumnFilter: false,
+        cell: ({ getValue }) => {
+            const value = getValue();
             const rounded = value == null ? 0 : Math.round(10 * value) / 10; // Rounding to the tenths place
             return <div className='ratingContainer'>
                 <div className='averageRating'
@@ -68,34 +117,41 @@ const columns = [
                 </div>
             </div>;
         },
+        header: makeHeader('Avg Rating'),
     },
     {
-        Header: 'Min Players',
-        accessor: 'minPlayers',
-        maxWidth: 100,
-        sortMethod: bottomSort,
+        accessorKey: 'minPlayers',
+        size: 100,
+        sortingFn: bottomSort,
+        sortDescFirst: false, // Fewest players first
+        enableColumnFilter: false,
+        header: makeHeader('Min Players'),
     },
     {
-        Header: 'Max Players',
-        accessor: 'maxPlayers',
-        defaultSortDesc: true,
-        maxWidth: 100,
-        sortMethod: topSort,
+        accessorKey: 'maxPlayers',
+        size: 100,
+        sortingFn: topSort,
+        sortDescFirst: true, // Most players first
+        enableColumnFilter: false,
+        header: makeHeader('Max Players'),
     },
     {
-        Header: 'Play Time',
-        accessor: 'playTime',
-        defaultSortDesc: true,
-        maxWidth: 100,
-        sortMethod: topSort,
-        Cell: props => <span>{props.value} Min</span>,
+        accessorKey: 'playTime',
+        size: 100,
+        sortingFn: topSort,
+        sortDescFirst: true, // Longest first
+        enableColumnFilter: false,
+        header: makeHeader('Play Time'),
+        cell: ({ getValue }) => <span>{getValue()} Min</span>,
     },
     {
-        Header: 'Weight',
-        accessor: 'weight',
-        maxWidth: 100,
-        Cell: props => {
-            const value = props.value;
+        accessorKey: 'weight',
+        size: 100,
+        sortDescFirst: false, // Lightest (lowest weight) first
+        enableColumnFilter: false,
+        header: makeHeader('Weight'),
+        cell: ({ getValue }) => {
+            const value = getValue();
             const rounded = value == null ? 0 : Math.round(100 * value) / 100; // Rounding to the hundreths place
             return <strong><span
                 style={{ color:

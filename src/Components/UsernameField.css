@@ -27,13 +27,13 @@ button {
     transition-duration: 0.2s;
 }
 
-button:hover, button:focus{
+button:not(:disabled):hover, button:not(:disabled):focus{
     background: #356094;
 	border: solid 1px #2A4E77;
 	text-decoration: none;
 }
 
-button:active {
+button:not(:disabled):active {
     box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.6);
 	background: #2E5481;
 	border: solid 1px #203E5F;

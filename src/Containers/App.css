@@ -37,13 +37,88 @@
 	}
   }
 
-.ReactTable {
+.tableWrapper {
 	margin: 0 auto;
 	max-width: 998px;
+	overflow-x: auto;
+	/* max-height to accomodate sticky header */
+	max-height: calc(100vh - 240px);
 }
 
-.rt-tr { /* React table-Table row (each row in the table) */
+.gameTable {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.gameTable th,
+.gameTable td {
+	padding: 6px 8px;
+	border-bottom: 1px solid #e0e0e0;
+	text-align: center;
+	vertical-align: middle;
+	/* Keep cell text on one line so each column grows to fit its content.
+	   The Title column opts out via whiteSpace: 'unset' in columns.jsx. */
+	white-space: nowrap;
+}
+
+.gameTable thead th {
+	background-color: #f5f5f5;
+	position: sticky;
+	top: 0;
+}
+
+.gameTable tbody tr:hover {
+	background-color: #f9f9f9;
+}
+
+.headerCell {
+	display: flex;
+	flex-direction: column;
 	align-items: center;
+	gap: 4px;
+}
+
+.headerLabel {
+	font-weight: bold;
+	user-select: none;
+	white-space: nowrap;
+}
+
+.headerCell input {
+	width: 100%;
+	max-width: 140px;
+	padding: 2px 4px;
+	font-size: 12px;
+	box-sizing: border-box;
+}
+
+td.noData {
+	padding: 24px;
+	text-align: center;
+	color: #888;
+}
+
+.pagination {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	margin: 12px 0;
+	flex-wrap: wrap;
+}
+
+.pagination button {
+	padding: 4px 10px;
+	cursor: pointer;
+}
+
+.pagination button:disabled {
+	cursor: default;
+	opacity: 0.4;
+}
+
+.pagination label {
+	font-size: 13px;
 }
 
 .thumbnail {

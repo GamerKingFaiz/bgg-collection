@@ -1,14 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import './App.css';
-import UsernameField from '../Components/UsernameField';
-import { COLLECTION_ENDPOINT } from '../utils/urlConstants';
-import { addFilterPlaceholder } from '../utils/helperFunctions';
+import {
+	flexRender,
+	getCoreRowModel,
+	getFilteredRowModel,
+	getPaginationRowModel,
+	getSortedRowModel,
+	useReactTable,
+} from '@tanstack/react-table';
+import { useCallback, useEffect, useState } from 'react';
 import bggLogoUrl from '../assets/powered-by-bgg-rgb.svg';
+import UsernameField from '../Components/UsernameField';
 import columns from '../utils/columns';
-
-/* Import React Table */
-import ReactTable from 'react-table';
-import 'react-table/react-table.css';
+import { COLLECTION_ENDPOINT } from '../utils/urlConstants';
+import './App.css';
 
 const App = () => {
 
@@ -16,7 +19,11 @@ const App = () => {
 	const [count, setCount] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
-	const [pageSize, setPageSize] = useState(undefined); // React Table default
+	/* Controlled pagination state. `pageSize` defaults to 300 (the old React Table
+	   default) and can be overridden on load via the ?rows= URL param. */
+	const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 300 });
+	/* Controlled sorting state, initialized to rank ascending (the old default). */
+	const [sorting, setSorting] = useState([{ id: 'rank', desc: false }]);
 
 	/*******************************
 	Asks the backend to fetch + merge the collection and thing stats in a single
@@ -49,8 +56,6 @@ const App = () => {
 	}, []);
 
 	useEffect(() => {
-		addFilterPlaceholder();
-
 		/* Grabbing the URL params */
 		let params = (new URL(document.location)).searchParams;
 		let username = params.get("username");
@@ -58,7 +63,7 @@ const App = () => {
 		/* Allowing the user to specify size of the page onLoad */
 		let rows = params.get("rows");
 		if (rows !== null) {
-			setPageSize(Number(rows));
+			setPagination(prev => ({ ...prev, pageSize: Number(rows) }));
 		}
 		
 		/* This call is made for if the website is loaded with params attached already */
@@ -81,6 +86,69 @@ const App = () => {
 		return () => window.removeEventListener("popstate", onPopState);
 	}, [fetchCollection]);
 
+	/* Build the TanStack table instance. Sorting and pagination are controlled so
+	   the page size can be driven by the ?rows= URL param and the default sort
+	   (rank ascending) is applied on load. */
+	const table = useReactTable({
+		data: gameList,
+		columns,
+		state: {
+			sorting, // Page loads with rank as the default sorted column
+			pagination,
+		},
+		onSortingChange: updater => {
+			const next = typeof updater === 'function' ? updater(table.getState().sorting) : updater;
+			setSorting(next);
+		},
+		onPaginationChange: updater => {
+			const next = typeof updater === 'function' ? updater(table.getState().pagination) : updater;
+			setPagination(next);
+		},
+		getCoreRowModel: getCoreRowModel(),
+		getSortedRowModel: getSortedRowModel(),
+		getFilteredRowModel: getFilteredRowModel(),
+		getPaginationRowModel: getPaginationRowModel(),
+		pageSizeOptions: [5, 10, 25, 50, 100, 300, 500, 1000, 2000, 5000, 10000],
+	});
+
+	const noDataText = loading
+		? "Loading..."
+		: (new URL(document.location)).searchParams.get("username")
+			? "No games found"
+			: "Enter a username to load a collection";
+
+	/* If the current page size (e.g. from ?rows=21) isn't in pageSizeOptions,
+	   include it so the dropdown reflects the actual page size instead of
+	   falling back to the first option. */
+	const pageSize = table.getState().pagination.pageSize;
+	const pageSizeOptions = table.options.pageSizeOptions.includes(pageSize)
+		? table.options.pageSizeOptions
+		: [...table.options.pageSizeOptions, pageSize].sort((a, b) => a - b);
+
+	/* Pagination controls */
+	const paginationBar = (
+		<div className='pagination'>
+			<button onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>«</button>
+			<button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>‹</button>
+			<span>
+				Page {table.getState().pagination.pageIndex + 1} of {Math.max(1, table.getPageCount())}
+			</span>
+			<button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>›</button>
+			<button onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>»</button>
+			<label>
+				Rows per page:{' '}
+				<select
+					value={pageSize}
+					onChange={e => table.setPageSize(Number(e.target.value))}
+				>
+					{pageSizeOptions.map(size => (
+						<option key={size} value={size}>{size}</option>
+					))}
+				</select>
+			</label>
+		</div>
+	);
+
 	return (
 		<div className='container'>
 			<h1><a className="h1Link" href='.'>Better BGG Collection</a></h1>
@@ -88,25 +156,49 @@ const App = () => {
 			<UsernameField fetchCollection = { fetchCollection } setGameList = { setGameList }/>
 			{error && <p className='errorText' role="alert">{error}</p>}
 			<p className='tipText'>Tip: Hold shift when sorting to multi-sort!</p>
-			<ReactTable 
-				data = { gameList }
-				columns = { columns }
-				defaultSorted = { [{ id: "rank", desc: false }] } // Page loads with rank as the default sorted column
-				showPaginationTop = { true }
-				minRows = { 5 }
-				pageSizeOptions = {[5, 10, 20, 25, 50, 100, 300, 500, 1000, 2000, 5000, 10000]}
-				defaultPageSize = { 300 }
-				pageSize = { pageSize }
-				loading = { loading }
-				noDataText = { 'No games found or you haven\'t entered your username yet' }
-				className = '-highlight'
-				defaultFilterMethod = {
-					/* Slightly modifying defaultFilterMethod. Changing startsWith to includes and putting a toLowerCase for both row and filter so case sensitivity doesn't matter when the user searchs */
-					(filter, row) => {
-						const id = filter.pivotId || filter.id;
-						return row[id] !== undefined ? String(row[id]).toLowerCase().includes(filter.value.toLowerCase()) : true
-					}
-				}/>
+			{paginationBar}
+			<div className='tableWrapper'>
+				<table className='gameTable'>
+					<thead>
+						{table.getHeaderGroups().map(headerGroup => (
+							<tr key={headerGroup.id}>
+								{headerGroup.headers.map(header => (
+									<th
+										key={header.id}
+										style={{ width: header.getSize() }}
+										colSpan={header.colSpan}
+									>
+										{header.isPlaceholder
+											? null
+											: flexRender(header.column.columnDef.header, header.getContext())}
+									</th>
+								))}
+							</tr>
+						))}
+					</thead>
+					<tbody>
+						{table.getRowModel().rows.length === 0
+							? <tr><td colSpan={table.getAllLeafColumns().length} className='noData'>{noDataText}</td></tr>
+							: table.getRowModel().rows.map(row => (
+								<tr key={row.id}>
+									{row.getVisibleCells().map(cell => (
+										<td key={cell.id} style={cell.column.columnDef.style}>
+											{/* Columns without a custom cell render the raw value
+											   (react-table v6's default). Guard on the cell *definition*
+											   so the thumbnail column's intentional null (no image) is
+											   preserved instead of showing the raw URL. */}
+											{cell.column.columnDef.cell
+												? flexRender(cell.column.columnDef.cell, cell.getContext())
+												: cell.getValue()}
+										</td>
+									))}
+								</tr>
+							))}
+					</tbody>
+				</table>
+			</div>
+			{/* Pagination controls (bottom) */}
+			{paginationBar}
 			<div id='footer'>
 				<p>Page created with <span role="img" aria-label="Red Heart">❤️</span></p>
 				<a
