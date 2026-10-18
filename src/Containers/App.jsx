@@ -156,6 +156,13 @@ const App = () => {
 			<UsernameField fetchCollection = { fetchCollection } setGameList = { setGameList }/>
 			{error && <p className='errorText' role="alert">{error}</p>}
 			<p className='tipText'>Tip: Hold shift when sorting to multi-sort!</p>
+			<button
+				className='clearFilters'
+				onClick={() => table.resetColumnFilters()}
+				disabled={table.getState().columnFilters.length === 0}
+			>
+				Clear all filters
+			</button>
 			{paginationBar}
 			<div className='tableWrapper'>
 				<table className='gameTable'>

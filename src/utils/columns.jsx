@@ -27,6 +27,24 @@ const includesFilter = (row, columnId, filterValue) => {
     return value != null ? String(value).toLowerCase().includes(String(filterValue).toLowerCase()) : true;
 };
 
+/* Min/max range filter. `filterValue` is a [min, max] tuple where either bound
+   may be null/undefined/'' (meaning "no bound"). Rows whose value is missing
+   (null/undefined/'N/A'/'--') are kept only when no bound is set, since they
+   can't satisfy a numeric comparison. */
+const rangeFilter = (row, columnId, filterValue) => {
+    const [min, max] = filterValue ?? [];
+    const hasMin = min !== null && min !== undefined && min !== '';
+    const hasMax = max !== null && max !== undefined && max !== '';
+    if (!hasMin && !hasMax) return true;
+    const raw = row.getValue(columnId);
+    if (raw === null || raw === undefined || raw === 'N/A' || raw === '--') return false;
+    const value = Number(raw);
+    if (Number.isNaN(value)) return false;
+    if (hasMin && value < Number(min)) return false;
+    if (hasMax && value > Number(max)) return false;
+    return true;
+};
+
 /* Shared header renderer: sort toggle + filter input. The first-click sort
    direction is declared per-column via the `sortDescFirst` option, so this
    handler just toggles and lets the table pick the direction. */
@@ -48,8 +66,22 @@ const makeHeader = (label) => ({ column }) => {
                 {column.getIsSorted() === 'asc' && ' ▲'}
                 {column.getIsSorted() === 'desc' && ' ▼'}
             </span>
-            {column.getCanFilter() && (
-                <input
+            {column.getCanFilter() && (column.columnDef.meta?.filterVariant === 'range'
+                ? <div className='rangeFilter'>
+                    <input
+                        type="number"
+                        placeholder="Min"
+                        value={column.getFilterValue()?.[0] ?? ''}
+                        onChange={e => column.setFilterValue(old => [e.target.value, old?.[1]])}
+                    />
+                    <input
+                        type="number"
+                        placeholder="Max"
+                        value={column.getFilterValue()?.[1] ?? ''}
+                        onChange={e => column.setFilterValue(old => [old?.[0], e.target.value])}
+                    />
+                </div>
+                : <input
                     placeholder="Search..."
                     value={column.getFilterValue() ?? ''}
                     onChange={e => column.setFilterValue(e.target.value)}
@@ -67,7 +99,9 @@ const columns = [
         size: 75,
         sortingFn: bottomSort,
         sortDescFirst: false, // Low number (best) first
-        enableColumnFilter: false,
+        enableColumnFilter: true,
+        filterFn: rangeFilter,
+        meta: { filterVariant: 'range' },
         header: makeHeader('Rank'),
     },
     {
@@ -99,7 +133,9 @@ const columns = [
         accessorKey: 'average',
         size: 100,
         sortDescFirst: true, // Highest rating first
-        enableColumnFilter: false,
+        enableColumnFilter: true,
+        filterFn: rangeFilter,
+        meta: { filterVariant: 'range' },
         cell: ({ getValue }) => {
             const value = getValue();
             const rounded = value == null ? 0 : Math.round(10 * value) / 10; // Rounding to the tenths place
@@ -124,7 +160,9 @@ const columns = [
         size: 100,
         sortingFn: bottomSort,
         sortDescFirst: false, // Fewest players first
-        enableColumnFilter: false,
+        enableColumnFilter: true,
+        filterFn: rangeFilter,
+        meta: { filterVariant: 'range' },
         header: makeHeader('Min Players'),
     },
     {
@@ -132,7 +170,9 @@ const columns = [
         size: 100,
         sortingFn: topSort,
         sortDescFirst: true, // Most players first
-        enableColumnFilter: false,
+        enableColumnFilter: true,
+        filterFn: rangeFilter,
+        meta: { filterVariant: 'range' },
         header: makeHeader('Max Players'),
     },
     {
@@ -140,7 +180,9 @@ const columns = [
         size: 100,
         sortingFn: topSort,
         sortDescFirst: true, // Longest first
-        enableColumnFilter: false,
+        enableColumnFilter: true,
+        filterFn: rangeFilter,
+        meta: { filterVariant: 'range' },
         header: makeHeader('Play Time'),
         cell: ({ getValue }) => <span>{getValue()} Min</span>,
     },
@@ -148,7 +190,9 @@ const columns = [
         accessorKey: 'weight',
         size: 100,
         sortDescFirst: false, // Lightest (lowest weight) first
-        enableColumnFilter: false,
+        enableColumnFilter: true,
+        filterFn: rangeFilter,
+        meta: { filterVariant: 'range' },
         header: makeHeader('Weight'),
         cell: ({ getValue }) => {
             const value = getValue();

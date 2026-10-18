@@ -17,6 +17,18 @@
 	font-size: 13px;
 }
 
+.clearFilters {
+	margin: 4px auto 8px;
+	padding: 4px 12px;
+	font-size: 13px;
+	cursor: pointer;
+}
+
+.clearFilters:disabled {
+	cursor: default;
+	opacity: 0.4;
+}
+
 .errorText {
 	color: #c0392b;
 	background-color: #fdecea;
@@ -42,7 +54,7 @@
 	max-width: 998px;
 	overflow-x: auto;
 	/* max-height to accomodate sticky header */
-	max-height: calc(100vh - 240px);
+	max-height: calc(100vh - 280px);
 }
 
 .gameTable {
@@ -89,7 +101,18 @@
 	max-width: 140px;
 	padding: 2px 4px;
 	font-size: 12px;
+	text-align: center;
 	box-sizing: border-box;
+}
+
+.rangeFilter {
+	display: flex;
+	gap: 3px;
+}
+
+.rangeFilter input {
+	width: 45px;
+	padding: 1px;
 }
 
 td.noData {
