@@ -1,5 +1,3 @@
-import React from 'react';
-
 /* Shared sort helpers: force null / undefined / 'N/A' / '--' to the bottom.
    `topSort` is the descending variant used for "higher = better" columns. */
 const bottomSort = (rowA, rowB, columnId) => {
