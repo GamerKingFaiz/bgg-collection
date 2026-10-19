@@ -53,9 +53,15 @@
 	margin: 0 auto;
 	max-width: 998px;
 	overflow-x: auto;
-	/* max-height to accomodate sticky header */
-	max-height: calc(100vh - 280px);
+	/* max-height to accomodate sticky header
+	   and so that the table takes up the full screen */
+	max-height: calc(100dvh - 300px);
+
+	@media only screen and (max-width: 768px) {
+		max-height: calc(100dvh - 130px);
+	}
 }
+
 
 .gameTable {
 	width: 100%;

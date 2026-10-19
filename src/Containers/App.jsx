@@ -204,8 +204,7 @@ const App = () => {
 					</tbody>
 				</table>
 			</div>
-			{/* Pagination controls (bottom) */}
-			{paginationBar}
+
 			<div id='footer'>
 				<p>Page created with <span role="img" aria-label="Red Heart">❤️</span></p>
 				<a
